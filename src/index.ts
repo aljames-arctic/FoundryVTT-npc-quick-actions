@@ -4,12 +4,12 @@ import * as ui from './ui';
 let shownToken: Token | null = null;
 
 Hooks.on('init', () => {
-  const originalClear = foundry.applications.hud.TokenHUD.prototype.clear;
-  foundry.applications.hud.TokenHUD.prototype.clear = function () {
-    originalClear.call(this);
+    const originalClose = foundry.applications.hud.TokenHUD.prototype.close;
+    foundry.applications.hud.TokenHUD.prototype.close = function () {
+    originalClose.call(this);
     shownToken = null;
     ui.hideTokenActions();
-  };
+  }
 });
 
 Hooks.on('updateToken', (token) => {
