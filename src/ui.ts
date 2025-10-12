@@ -60,25 +60,25 @@ export const showTokenActions = (token?: Token | null) => {
   hideTokenActions();
   module.logger.debug('showTokenActions()', token);
   if (!(token?.document?.isOwner && game.user?.hasRole(MinimumRole.get()))) {
-    module.logger.debug('show() -> false, not owner or insufficient role');
+    module.logger.debug('showTokenActions() -> false, not owner or insufficient role');
     return false;
   }
 
   const actor = token.actor as dnd5e.documents.Actor5e;
   if (!isShownForActorType(actor)) {
-    module.logger.debug('show() -> false, not shown for actor.type', actor.type);
+    module.logger.debug('showTokenActions() -> false, not shown for actor.type', actor.type);
     return false;
   }
 
   const actions = getTokenActions(actor);
   if (!actions || actions.length === 0) {
-    module.logger.debug('show() -> true... but no actions');
+    module.logger.debug('showTokenActions() -> true... but no actions');
     const noActions = document.createElement('div');
     noActions.classList.add(CSS_NO_ACTIONS);
     noActions.appendChild(document.createTextNode(module.localize('no-actions')));
     actionsContainer.appendChild(noActions);
   } else {
-    module.logger.debug('show() -> true', actions);
+    module.logger.debug('showTokenActions() -> true', actions);
     let lastActivationCategory: ActivationCategory | null = null;
     let activationCategoryContainer: HTMLElement | null = null;
     for (const action of actions) {

@@ -15,7 +15,7 @@ Hooks.on('init', () => {
 Hooks.on('updateToken', (token) => {
   if (shownToken && shownToken.document.id === token.id) {
     setTimeout(() => {
-      ui.show(shownToken);
+      ui.showTokenActions(shownToken);
     }, 1);
   }
 });
@@ -23,7 +23,7 @@ Hooks.on('updateToken', (token) => {
 Hooks.on('updateItem', (item) => {
   if (shownToken && shownToken.actor === item.parent) {
     setTimeout(() => {
-      ui.show(shownToken);
+      ui.showTokenActions(shownToken);
     }, 1);
   }
 });
@@ -31,14 +31,14 @@ Hooks.on('updateItem', (item) => {
 Hooks.on('updateActor', (actor) => {
   if (shownToken && shownToken.actor === actor) {
     setTimeout(() => {
-      ui.show(shownToken);
+      ui.showTokenActions(shownToken);
     }, 1);
   }
 });
 
 Hooks.on('renderTokenHUD', (tokenHUD) => {
   const token = tokenHUD.object;
-  if (ui.show(token)) {
+  if (ui.showTokenActions(token)) {
     shownToken = token ?? null;
   }
 });
