@@ -322,7 +322,7 @@ const getActionsForItem = (actor: dnd5e.documents.Actor5e, item: dnd5e.documents
   }
   
   // 6. Construct the single Action
-  const roll = () => { void item.use(itemActivityId!); };
+  const roll = () => { void item.use(); };
   const action: Action = {
       roll,
       actor,
