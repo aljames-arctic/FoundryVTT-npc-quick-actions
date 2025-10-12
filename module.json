@@ -1,0 +1,77 @@
+
+{
+  "version": "#{VERSION}#",
+  "flags": {
+    "allowBugReporter": true
+  },
+  "changelog": "https://github.com/aljames-arctic/FoundryVTT-npc-quick-actions/releases",
+  "url": "#{URL}#",
+  "manifest": "#{MANIFEST}#",
+  "download": "#{DOWNLOAD}#",
+  "bugs": "https://github.com/aljames-arctic/macro-util/issues",
+  "compatibility": {
+    "minimum": "13",
+    "verified": "13.350"
+  },
+  "esmodules": [
+    "module.js"
+  ],
+  "styles": [
+    {
+      "src": "styles.css"
+    }
+  ],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json",
+      "flags": {}
+    }
+  ],
+  "relationships": {
+    "systems": [
+      {
+        "id": "dnd5e",
+        "type": "system",
+        "compatibility": {
+          "verified": "5.1.9"
+        }
+      }
+    ]
+  },
+  "license": "LICENSE",
+  "media": [
+    {
+      "type": "setup",
+      "url": "https://github.com/illandril/FoundryVTT-npc-quick-actions/raw/main/screenshots/setup.png",
+      "loop": false,
+      "flags": {}
+    },
+    {
+      "type": "screenshot",
+      "url": "https://github.com/illandril/FoundryVTT-npc-quick-actions/raw/main/screenshots/example-a.png",
+      "loop": false,
+      "flags": {}
+    }
+  ],
+  "authors": [
+    {
+      "name": "Joe Spandrusyszyn (illandril)",
+      "email": "foundry-modules@illandril.net",
+      "url": "https://github.com/illandril",
+      "discord": "joespan",
+      "flags": {}
+    },
+    {
+      "name": "Alexander James (bakanabaka)",
+      "email": "bakanabaka.vtt@gmail.com",
+      "url": "https://github.com/aljames-arctic",
+      "discord": "bakanabaka",
+      "flags": {}
+    }
+  ],
+  "id": "illandril-npc-quick-actions",
+  "title": "Illandril's Token Quick Actions (5e)",
+  "description": "<p>Shows a \"quick actions\" menu when right-clicking a token, showing the actions available to that token during combat (currently only compatible with the DnD5e system).</p>"
+}
