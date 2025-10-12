@@ -52,7 +52,7 @@ const isShownForActorType = (actor: dnd5e.documents.Actor5e) => {
   if (actor.type === 'vehicle') {
     return ShowForVehicleActors.get();
   }
-  module.logger.debug('isShownForActorType saw a type it does not recognize', actor.type);
+  module.logger.debug('isShownForActorType saw a type it does not recognize:', actor.type);
   return true;
 };
 
@@ -61,30 +61,30 @@ export const showTokenActions = (token?: Token | null) => {
   module.logger.debug('showTokenActions()', token);
 
   if (!game?.canvas?.hud?.token?.element?.children) {
-    module.logger.debug('showTokenActions() -> false, no token HUD');
+    module.logger.debug('showTokenActions() -> false, no token HUD on token:', token);
     return false;
   }
 
   if (!(token?.document?.isOwner && game.user?.hasRole(MinimumRole.get()))) {
-    module.logger.debug('showTokenActions() -> false, not owner or insufficient role');
+    module.logger.debug('showTokenActions() -> false, not owner or insufficient role for token:', token);
     return false;
   }
 
   const actor = token.actor as dnd5e.documents.Actor5e;
   if (!isShownForActorType(actor)) {
-    module.logger.debug('showTokenActions() -> false, not shown for actor.type', actor.type);
+    module.logger.debug('showTokenActions() -> false, not shown for actor.type:', actor.type);
     return false;
   }
 
   const actions = getTokenActions(actor);
   if (!actions || actions.length === 0) {
-    module.logger.debug('showTokenActions() -> true... but no actions');
+    module.logger.debug('showTokenActions() -> true... but no actions:', actions);
     const noActions = document.createElement('div');
     noActions.classList.add(CSS_NO_ACTIONS);
     noActions.appendChild(document.createTextNode(module.localize('no-actions')));
     actionsContainer.appendChild(noActions);
   } else {
-    module.logger.debug('showTokenActions() -> true', actions);
+    module.logger.debug('showTokenActions() -> true:', actions);
     let lastActivationCategory: ActivationCategory | null = null;
     let activationCategoryContainer: HTMLElement | null = null;
     for (const action of actions) {

@@ -236,7 +236,7 @@ const getActionNameWithUses = (item: dnd5e.documents.Item5e, baseName: string): 
     const uses = ItemSystem.calculateUsesForItem(item);
 
     if (!uses) { 
-        module.logger.debug('getActionNameWithUses() - no uses');
+        module.logger.debug(`getActionNameWithUses() - no uses on item:`, item);
         return baseName;
     }
     module.logger.debug('getActionNameWithUses() - uses', uses);
@@ -244,7 +244,7 @@ const getActionNameWithUses = (item: dnd5e.documents.Item5e, baseName: string): 
     // Filter out zero-use items if the setting is disabled
     if (uses.available === 0) {
         if (!ShowZeroUsesRemainActions.get()) { 
-            module.logger.debug('getActionNameWithUses() - filtered by zero uses');
+            module.logger.debug(`getActionNameWithUses() - filtered by zero uses for item:`, item);
             return null;
         }
     }
@@ -277,7 +277,7 @@ const getActionsForItem = (actor: dnd5e.documents.Actor5e, item: dnd5e.documents
   // 2. Determine base Item Type Categories
   const typeCategoryData = getTypeCategory(item);
   if (!typeCategoryData) {
-      module.logger.debug('getActionsForItem() - no item type category');
+      module.logger.debug(`getActionsForItem() - no item type category for item:`, item);
       return [];
   }
 
@@ -287,7 +287,7 @@ const getActionsForItem = (actor: dnd5e.documents.Actor5e, item: dnd5e.documents
   const finalName = getActionNameWithUses(item, baseName);
   
   if (!finalName) {
-      module.logger.debug('getActionsForItem() - filtered by zero uses');
+      module.logger.debug(`getActionsForItem() - filtered by zero uses for item:`, item);
       return [];
   }
   
@@ -317,7 +317,7 @@ const getActionsForItem = (actor: dnd5e.documents.Actor5e, item: dnd5e.documents
 
   // 5. If no viable activity was found, return nothing
   if (!itemActivityId || !itemActivationCategory) {
-    module.logger.debug('getActionsForItem() - item had no viable activities after filtering.');
+    module.logger.debug(`getActionsForItem() - item had no viable activities after filtering for item ${item.name}.`);
     return [];
   }
   
