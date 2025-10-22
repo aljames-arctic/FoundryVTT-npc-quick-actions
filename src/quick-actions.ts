@@ -195,6 +195,7 @@ const getDefaultTypeCategory = (item: dnd5e.documents.Item5e): Pick<Action, 'typ
 const getTypeCategory = (item: dnd5e.documents.Item5e): Pick<Action, 'typeCategory' | 'subcategory'> | null => {
   switch (item.type) {
     case 'feat':
+      if (item.system.properties?.has('trait')) return null;
       return { typeCategory: TYPE_CATEGORY.feature, subcategory: 0 };
     case 'spell':
       return getSpellTypeCategory(item);
