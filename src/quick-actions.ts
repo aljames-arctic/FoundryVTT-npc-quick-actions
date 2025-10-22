@@ -361,6 +361,9 @@ export const getTokenActions = (actor: dnd5e.documents.Actor5e) => {
   const actions: Action[] = [];
   
   for (const item of actor.items) {
+    // Only features have the Passive 'trait' property, but placing this logic here
+    // provides a way to filter all items, you just need to manually add this to the set
+    if (item.system.properties?.has('trait')) continue;
     const itemActions = getActionsForItem(actor, item);
     actions.push(...itemActions);
   }
