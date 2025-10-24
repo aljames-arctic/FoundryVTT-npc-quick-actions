@@ -8,6 +8,7 @@ const CSS_CONTAINER = module.cssPrefix.child('container');
 const CSS_ACTIVATION_CATEGORY = module.cssPrefix.child('activationCategory');
 const CSS_ACTIVATION_CATEGORY_NAME = module.cssPrefix.child('activationCategory-name');
 const CSS_ENTRY = module.cssPrefix.child('entry');
+const CSS_ACTION_ENTRIES = module.cssPrefix.child('action-entries');
 const CSS_NO_ACTIONS = module.cssPrefix.child('no-actions');
 const CSS_COLLAPSED = module.cssPrefix.child('collapsed');
 
@@ -28,29 +29,45 @@ export const hideTokenActions = () => {
   emptyNode(actionsContainer);
 };
 
-const createCategoryContainer = (activationCategory: ActivationCategory) => {
+const COLLAPSED_CATEGORIES_FLAG = 'collapsedCategories';
+const createCategoryContainer = (activationCategory: ActivationCategory, actor: dnd5e.documents.Actor5e) => {
   const activationCategoryContainer = document.createElement('div');
   activationCategoryContainer.classList.add(CSS_ACTIVATION_CATEGORY);
-  // activationCategoryContainer.classList.add(CSS_COLLAPSED); // Start collapsed by default by uncommenting
 
-  const categoryTitle = game.i18n.localize(activationCategory.name);
+  // Use the non-localized name as the key for persistent storage
+  const categoryKey = activationCategory.name;
+  const actionType = categoryKey.split('.').pop() || 'UNDEFINED';
+
+  // 1. APPLY STATE: If the category key is in the stored list, start collapsed.
+  const collapsedCategories = (actor.getFlag(module.id, COLLAPSED_CATEGORIES_FLAG) || {}) as Record<string, boolean>;
+  if (collapsedCategories[actionType]) {
+    activationCategoryContainer.classList.add(CSS_COLLAPSED);
+  }
+  // Note: Since you want it expanded by default if no data exists, we DON'T add the class here unconditionally.
+
+  const categoryTitle = game.i18n.localize(categoryKey);
   const titleElement = document.createElement('div');
   titleElement.setAttribute('data-testid', 'categoryTitle');
   titleElement.classList.add(CSS_ACTIVATION_CATEGORY_NAME);
   titleElement.appendChild(document.createTextNode(categoryTitle));
 
-  // 1. Add the click handler to the category title
-  titleElement.addEventListener('click', () => {
-    // 2. Toggle the CSS_COLLAPSED class on the container
-    activationCategoryContainer.classList.toggle(CSS_COLLAPSED);
+  // 2. SAVE STATE: Update the actor flag on click
+  titleElement.addEventListener('click', async () => {
+    // Toggle the class and check the resulting state
+    const isCollapsed = activationCategoryContainer.classList.toggle(CSS_COLLAPSED);
+
+    // Update the current list (in case it was updated elsewhere)
+    const collapsedCategories = (actor.getFlag(module.id, COLLAPSED_CATEGORIES_FLAG) || {}) as Record<string, boolean>;
+    collapsedCategories[actionType] = isCollapsed;
+    await actor.setFlag(module.id, COLLAPSED_CATEGORIES_FLAG, collapsedCategories);
   });
 
   activationCategoryContainer.appendChild(titleElement);
   actionsContainer.appendChild(activationCategoryContainer);
 
-  // Create a separate container for the action entries
+  // Create the container for action entries
   const actionEntriesContainer = document.createElement('div');
-  actionEntriesContainer.classList.add(module.cssPrefix.child('action-entries')); // A new container class for entries
+  actionEntriesContainer.classList.add(CSS_ACTION_ENTRIES);
   activationCategoryContainer.appendChild(actionEntriesContainer);
 
   return { categoryContainer: activationCategoryContainer, entriesContainer: actionEntriesContainer };
@@ -106,12 +123,12 @@ export const showTokenActions = (token?: Token | null) => {
     for (const action of actions) {
       if (action.activationCategory !== lastActivationCategory || !activationCategoryContainer) {
         lastActivationCategory = action.activationCategory;
-        const containers = createCategoryContainer(action.activationCategory);
+        const containers = createCategoryContainer(action.activationCategory, actor);
         activationCategoryContainer = containers.categoryContainer;
         actionEntriesContainer = containers.entriesContainer; // Store the new entries container
       }
       // Append the action row to the actionEntriesContainer
-      actionEntriesContainer.appendChild(getActionRow(action));
+      actionEntriesContainer?.appendChild(getActionRow(action));
     }
   }
 
