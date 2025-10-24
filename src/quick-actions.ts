@@ -298,21 +298,21 @@ const getActionsForItem = (actor: dnd5e.documents.Actor5e, item: dnd5e.documents
   const activities =
     item.system.activities instanceof foundry.utils.Collection ? item.system.activities.entries() : [];
 
-  let highestPrioActivity: { category: ActivationCategory; id: string } | null = null;
+  let lowestPrioActivity: { category: ActivationCategory; id: string } | null = null;
 
   for (const [activityId, activity] of activities) {
     const currentCategory = getActivationCategoryFromActivity(activity);
 
     if (currentCategory) {
-      if (!highestPrioActivity || currentCategory.sort > highestPrioActivity.category.sort) {
-        highestPrioActivity = { category: currentCategory, id: activityId };
+      if (!lowestPrioActivity || currentCategory.sort < lowestPrioActivity.category.sort) {
+        lowestPrioActivity = { category: currentCategory, id: activityId };
       }
     }
   }
 
-  if (highestPrioActivity) {
-    itemActivationCategory = highestPrioActivity.category;
-    itemActivityId = highestPrioActivity.id;
+  if (lowestPrioActivity) {
+    itemActivationCategory = lowestPrioActivity.category;
+    itemActivityId = lowestPrioActivity.id;
   }
 
   // 5. If no viable activity was found, return nothing
