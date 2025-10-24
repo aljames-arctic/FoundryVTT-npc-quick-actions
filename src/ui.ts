@@ -1,5 +1,5 @@
 import module from './module';
-import { type Action, type ActivationCategory, getTokenActions } from './quick-actions';
+import { type Action, type ActivationCategory, getTokenActions, TYPE_CATEGORY, type TypeCategory } from './quick-actions';
 import { MinimumRole, ShowForNPCActors, ShowForPCActors, ShowForVehicleActors } from './settings';
 
 const CSS_ACTIVE = module.cssPrefix.child('active');
@@ -7,6 +7,9 @@ const CSS_OUTER_CONTAINER = module.cssPrefix.child('outer-container');
 const CSS_CONTAINER = module.cssPrefix.child('container');
 const CSS_ACTIVATION_CATEGORY = module.cssPrefix.child('activationCategory');
 const CSS_ACTIVATION_CATEGORY_NAME = module.cssPrefix.child('activationCategory-name');
+const CSS_SUBSECTION_WRAPPER = module.cssPrefix.child('subsection-wrapper');
+const CSS_SUBSECTION_HEADER = module.cssPrefix.child('subsection-header');
+const CSS_SUBSECTION_ENTRIES = module.cssPrefix.child('subsection-entries');
 const CSS_ENTRY = module.cssPrefix.child('entry');
 const CSS_ACTION_ENTRIES = module.cssPrefix.child('action-entries');
 const CSS_NO_ACTIONS = module.cssPrefix.child('no-actions');
@@ -30,20 +33,18 @@ export const hideTokenActions = () => {
 };
 
 const COLLAPSED_CATEGORIES_FLAG = 'collapsedCategories';
+
 const createCategoryContainer = (activationCategory: ActivationCategory, actor: dnd5e.documents.Actor5e) => {
   const activationCategoryContainer = document.createElement('div');
   activationCategoryContainer.classList.add(CSS_ACTIVATION_CATEGORY);
 
-  // Use the non-localized name as the key for persistent storage
   const categoryKey = activationCategory.name;
   const actionType = categoryKey.split('.').pop() || 'UNDEFINED';
 
-  // 1. APPLY STATE: If the category key is in the stored list, start collapsed.
-  const collapsedCategories = (actor.getFlag(module.id, COLLAPSED_CATEGORIES_FLAG) || {}) as Record<string, boolean>;
-  if (collapsedCategories[actionType]) {
+  const collapsedCategories = (actor.getFlag(module.id, COLLAPSED_CATEGORIES_FLAG) || {}) as Record<string, { state: boolean }>;
+  if (collapsedCategories[actionType]?.state) {
     activationCategoryContainer.classList.add(CSS_COLLAPSED);
   }
-  // Note: Since you want it expanded by default if no data exists, we DON'T add the class here unconditionally.
 
   const categoryTitle = game.i18n.localize(categoryKey);
   const titleElement = document.createElement('div');
@@ -51,26 +52,84 @@ const createCategoryContainer = (activationCategory: ActivationCategory, actor: 
   titleElement.classList.add(CSS_ACTIVATION_CATEGORY_NAME);
   titleElement.appendChild(document.createTextNode(categoryTitle));
 
-  // 2. SAVE STATE: Update the actor flag on click
   titleElement.addEventListener('click', async () => {
-    // Toggle the class and check the resulting state
     const isCollapsed = activationCategoryContainer.classList.toggle(CSS_COLLAPSED);
-
-    // Update the current list (in case it was updated elsewhere)
-    const collapsedCategories = (actor.getFlag(module.id, COLLAPSED_CATEGORIES_FLAG) || {}) as Record<string, boolean>;
-    collapsedCategories[actionType] = isCollapsed;
+    const collapsedCategories = (actor.getFlag(module.id, COLLAPSED_CATEGORIES_FLAG) || {}) as Record<string, { state: boolean }>;
+    // Update the collapsed state for the category
+    if (!collapsedCategories[actionType]) { collapsedCategories[actionType] = { state: isCollapsed }; }
+    else collapsedCategories[actionType].state = isCollapsed;
+    // Store the updated collapsed state
     await actor.setFlag(module.id, COLLAPSED_CATEGORIES_FLAG, collapsedCategories);
   });
 
   activationCategoryContainer.appendChild(titleElement);
   actionsContainer.appendChild(activationCategoryContainer);
 
-  // Create the container for action entries
   const actionEntriesContainer = document.createElement('div');
   actionEntriesContainer.classList.add(CSS_ACTION_ENTRIES);
   activationCategoryContainer.appendChild(actionEntriesContainer);
 
   return { categoryContainer: activationCategoryContainer, entriesContainer: actionEntriesContainer };
+};
+
+const createSubsectionContainer = (
+  subsectionKey: string,
+  activationCategory: ActivationCategory,
+  actor: dnd5e.documents.Actor5e,
+  parent: HTMLElement
+): HTMLElement => {
+  const subsectionWrapper = document.createElement('div');
+  subsectionWrapper.classList.add(CSS_SUBSECTION_WRAPPER);
+  parent.appendChild(subsectionWrapper);
+
+  const categoryKey = activationCategory.name;
+  const actionType = categoryKey.split('.').pop() || 'UNDEFINED';
+
+  const collapsedCategories = (actor.getFlag(module.id, COLLAPSED_CATEGORIES_FLAG) || {}) as Record<string, Record<string, { state: boolean }>>;
+  if (!collapsedCategories[actionType]) collapsedCategories[actionType] = {};
+  if (!collapsedCategories[actionType][subsectionKey]) collapsedCategories[actionType][subsectionKey] = { state: true };
+  else if (collapsedCategories[actionType][subsectionKey]?.state) {
+    subsectionWrapper.classList.add(CSS_COLLAPSED);
+  }
+
+  const subsectionHeader = document.createElement('div');
+  subsectionHeader.classList.add(CSS_SUBSECTION_HEADER);
+  subsectionHeader.textContent = subsectionKey;
+  subsectionWrapper.appendChild(subsectionHeader);
+
+  subsectionHeader.addEventListener('click', async () => {
+    const isCollapsed = subsectionWrapper.classList.toggle(CSS_COLLAPSED);
+    const collapsedCategories = (actor.getFlag(module.id, COLLAPSED_CATEGORIES_FLAG) || {}) as Record<string, Record<string, { state: boolean }>>;
+    // Update the collapsed state for the category
+    if (!collapsedCategories[actionType]) collapsedCategories[actionType] = {};
+    if (!collapsedCategories[actionType][subsectionKey]) collapsedCategories[actionType][subsectionKey] = { state: isCollapsed };
+    else collapsedCategories[actionType][subsectionKey].state = isCollapsed;
+    // Store the updated collapsed state
+    await actor.setFlag(module.id, COLLAPSED_CATEGORIES_FLAG, collapsedCategories);
+  });
+
+  const subsectionContainer = document.createElement('div');
+  subsectionContainer.classList.add(CSS_SUBSECTION_ENTRIES);
+  subsectionWrapper.appendChild(subsectionContainer);
+
+  return subsectionContainer;
+};
+
+const getTypeCategoryName = (typeCategory: TypeCategory) => {
+  const sort = typeCategory.sort;
+  if (sort === TYPE_CATEGORY.weapon.sort || sort === TYPE_CATEGORY.equipment.sort || sort === TYPE_CATEGORY.consumable.sort) {
+    return module.localize('type_item');
+  }
+  if (sort === TYPE_CATEGORY.feature.sort) {
+    return module.localize('type_feature');
+  }
+  if (sort === TYPE_CATEGORY.spell.sort) {
+    return module.localize('type_spell');
+  }
+  if (sort === TYPE_CATEGORY.other.sort) {
+    return module.localize('type_other');
+  }
+  return '';
 };
 
 const isShownForActorType = (actor: dnd5e.documents.Actor5e) => {
@@ -117,18 +176,32 @@ export const showTokenActions = (token?: Token | null) => {
   } else {
     module.logger.debug('showTokenActions() -> true:', actions);
     let lastActivationCategory: ActivationCategory | null = null;
-    let activationCategoryContainer: HTMLElement | null = null;
-    let actionEntriesContainer: HTMLElement | null = null; // New variable for the entries container
+    let actionEntriesContainer: HTMLElement | null = null;
+
+    let lastTypeCategoryName: string | null = null;
+    let subsectionEntriesContainer: HTMLElement | null = null;
 
     for (const action of actions) {
-      if (action.activationCategory !== lastActivationCategory || !activationCategoryContainer) {
+      if (action.activationCategory !== lastActivationCategory) {
         lastActivationCategory = action.activationCategory;
         const containers = createCategoryContainer(action.activationCategory, actor);
-        activationCategoryContainer = containers.categoryContainer;
-        actionEntriesContainer = containers.entriesContainer; // Store the new entries container
+        actionEntriesContainer = containers.entriesContainer;
+        lastTypeCategoryName = null;
       }
-      // Append the action row to the actionEntriesContainer
-      actionEntriesContainer?.appendChild(getActionRow(action));
+
+      const typeCategoryName = getTypeCategoryName(action.typeCategory);
+
+      if (typeCategoryName && typeCategoryName !== lastTypeCategoryName) {
+        lastTypeCategoryName = typeCategoryName;
+        subsectionEntriesContainer = createSubsectionContainer(
+          typeCategoryName,
+          action.activationCategory,
+          actor,
+          actionEntriesContainer
+        );
+      }
+
+      subsectionEntriesContainer?.appendChild(getActionRow(action));
     }
   }
 

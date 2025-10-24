@@ -28,38 +28,58 @@
   gap: 3px;
 }
 
-/* 1. Base style for the category name */
 .illandril-npc-quick-actions--activationCategory-name {
     font-weight: bold;
     color: rgba(0, 0, 100, 0.8);
     cursor: pointer;
     user-select: none;
-    /* Ensure there's space for the icon and allow for flex layout */
     display: flex;
     align-items: center;
 }
 
-/* 2. Style for the pseudo-element (the icon) */
 .illandril-npc-quick-actions--activationCategory-name::before {
-    /* Base styling for all states */
-    content: "[-]"; /* Default content: Expanded state */
-    margin-right: 5px; /* Space between icon and text */
-    font-weight: normal; /* Make the icon less bold than the title */
+    content: "[-]";
+    margin-right: 5px;
+    font-weight: normal;
 }
 
-/* 3. Rule for the COLLAPSED state (overrides the default content) */
 .illandril-npc-quick-actions--collapsed .illandril-npc-quick-actions--activationCategory-name::before {
-    content: "[+]"; /* Collapsed content: Plus sign */
+    content: "[+]";
 }
 
-/* Existing rule to hide the actions when collapsed */
 .illandril-npc-quick-actions--collapsed .illandril-npc-quick-actions--action-entries {
+    display: none;
+}
+
+.illandril-npc-quick-actions--subsection-header {
+    font-weight: bold;
+    color: rgba(0, 0, 100, 0.7);
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    margin-top: 4px;
+    padding-left: 10px;
+}
+
+.illandril-npc-quick-actions--subsection-header::before {
+    content: "[-]";
+    margin-right: 5px;
+    font-weight: normal;
+}
+
+.illandril-npc-quick-actions--collapsed > .illandril-npc-quick-actions--subsection-header::before {
+    content: "[+]";
+}
+
+.illandril-npc-quick-actions--collapsed > .illandril-npc-quick-actions--subsection-entries {
     display: none;
 }
 
 .illandril-npc-quick-actions--entry {
   cursor: pointer;
   opacity: 0.75;
+  padding-left: 20px;
 }
 
 .illandril-npc-quick-actions--entry:hover {

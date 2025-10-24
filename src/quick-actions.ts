@@ -46,15 +46,16 @@ const ACTIVATION_CATEGORY = {
 
 type TypeCategory = {
   sort: number;
+  name: string;
   prefix?: string;
 };
-const TYPE_CATEGORY = {
-  weapon: { sort: 1 },
-  equipment: { sort: 2 },
-  consumable: { sort: 3 },
-  other: { sort: 4 },
-  feature: { sort: 5 },
-  spell: { sort: 6 },
+export const TYPE_CATEGORY = {
+  weapon: { sort: 1, name: "illandril-npc-quick-actions.type_weapon" },
+  equipment: { sort: 2, name: "illandril-npc-quick-actions.type_equipment"},
+  consumable: { sort: 3, name: "illandril-npc-quick-actions.type_consumable"},
+  other: { sort: 4, name: "illandril-npc-quick-actions.type_other"},
+  feature: { sort: 5, name: "illandril-npc-quick-actions.type_feature" },
+  spell: { sort: 6, name: "illandril-npc-quick-actions.type_spell" },
 };
 
 /**

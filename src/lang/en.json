@@ -40,6 +40,15 @@
     "activation_new-turn": "Start of Turn",
     "reset-for-new-turn": "Reset Actions for New Turn",
     "legendary-actions-reset": "*Legendary Actions have been reset*",
+
+    "type_item": "Items",
+    "type_weapon": "Weapons",
+    "type_equipment": "Equipment",
+    "type_consumable": "Consumables",
+    "type_other": "Other",
+    "type_feature": "Features",
+    "type_spell": "Spells",
+
     "spell-abbr": {
       "pact": "P",
       "cantrip": "C",
