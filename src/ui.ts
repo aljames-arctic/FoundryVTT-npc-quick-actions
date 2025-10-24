@@ -9,6 +9,7 @@ const CSS_ACTIVATION_CATEGORY = module.cssPrefix.child('activationCategory');
 const CSS_ACTIVATION_CATEGORY_NAME = module.cssPrefix.child('activationCategory-name');
 const CSS_ENTRY = module.cssPrefix.child('entry');
 const CSS_NO_ACTIONS = module.cssPrefix.child('no-actions');
+const CSS_COLLAPSED = module.cssPrefix.child('collapsed');
 
 const actionsOuterContainer = document.createElement('div');
 actionsOuterContainer.classList.add(CSS_OUTER_CONTAINER);
@@ -30,16 +31,29 @@ export const hideTokenActions = () => {
 const createCategoryContainer = (activationCategory: ActivationCategory) => {
   const activationCategoryContainer = document.createElement('div');
   activationCategoryContainer.classList.add(CSS_ACTIVATION_CATEGORY);
+  // activationCategoryContainer.classList.add(CSS_COLLAPSED); // Start collapsed by default by uncommenting
 
   const categoryTitle = game.i18n.localize(activationCategory.name);
   const titleElement = document.createElement('div');
   titleElement.setAttribute('data-testid', 'categoryTitle');
   titleElement.classList.add(CSS_ACTIVATION_CATEGORY_NAME);
   titleElement.appendChild(document.createTextNode(categoryTitle));
+
+  // 1. Add the click handler to the category title
+  titleElement.addEventListener('click', () => {
+    // 2. Toggle the CSS_COLLAPSED class on the container
+    activationCategoryContainer.classList.toggle(CSS_COLLAPSED);
+  });
+
   activationCategoryContainer.appendChild(titleElement);
   actionsContainer.appendChild(activationCategoryContainer);
 
-  return activationCategoryContainer;
+  // Create a separate container for the action entries
+  const actionEntriesContainer = document.createElement('div');
+  actionEntriesContainer.classList.add(module.cssPrefix.child('action-entries')); // A new container class for entries
+  activationCategoryContainer.appendChild(actionEntriesContainer);
+
+  return { categoryContainer: activationCategoryContainer, entriesContainer: actionEntriesContainer };
 };
 
 const isShownForActorType = (actor: dnd5e.documents.Actor5e) => {
@@ -87,12 +101,17 @@ export const showTokenActions = (token?: Token | null) => {
     module.logger.debug('showTokenActions() -> true:', actions);
     let lastActivationCategory: ActivationCategory | null = null;
     let activationCategoryContainer: HTMLElement | null = null;
+    let actionEntriesContainer: HTMLElement | null = null; // New variable for the entries container
+
     for (const action of actions) {
       if (action.activationCategory !== lastActivationCategory || !activationCategoryContainer) {
         lastActivationCategory = action.activationCategory;
-        activationCategoryContainer = createCategoryContainer(action.activationCategory);
+        const containers = createCategoryContainer(action.activationCategory);
+        activationCategoryContainer = containers.categoryContainer;
+        actionEntriesContainer = containers.entriesContainer; // Store the new entries container
       }
-      activationCategoryContainer.appendChild(getActionRow(action));
+      // Append the action row to the actionEntriesContainer
+      actionEntriesContainer.appendChild(getActionRow(action));
     }
   }
 
