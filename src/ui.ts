@@ -1,19 +1,26 @@
+// ui.ts
 import module from './module';
-import { type Action, type ActivationCategory, getTokenActions, TYPE_CATEGORY, type TypeCategory } from './quick-actions';
-import { MinimumRole, ShowForNPCActors, ShowForPCActors, ShowForVehicleActors } from './settings';
+import { type Action, type ActivationCategory, getTokenActions, type SpellSubcategory, type DisplayCategory, DISPLAY_CATEGORY, type Category } from './quick-actions';
+import { MinimumRole, ShowForNPCActors, ShowForPCActors, ShowForVehicleActors, ShowZeroUsesRemainActions } from './settings';
 
 const CSS_ACTIVE = module.cssPrefix.child('active');
 const CSS_OUTER_CONTAINER = module.cssPrefix.child('outer-container');
 const CSS_CONTAINER = module.cssPrefix.child('container');
-const CSS_ACTIVATION_CATEGORY = module.cssPrefix.child('activationCategory');
-const CSS_ACTIVATION_CATEGORY_NAME = module.cssPrefix.child('activationCategory-name');
-const CSS_SUBSECTION_WRAPPER = module.cssPrefix.child('subsection-wrapper');
-const CSS_SUBSECTION_HEADER = module.cssPrefix.child('subsection-header');
-const CSS_SUBSECTION_ENTRIES = module.cssPrefix.child('subsection-entries');
 const CSS_ENTRY = module.cssPrefix.child('entry');
-const CSS_ACTION_ENTRIES = module.cssPrefix.child('action-entries');
 const CSS_NO_ACTIONS = module.cssPrefix.child('no-actions');
 const CSS_COLLAPSED = module.cssPrefix.child('collapsed');
+
+const CSS_DISPLAY_CATEGORY_WRAPPER = module.cssPrefix.child('display-category-wrapper');
+const CSS_DISPLAY_CATEGORY_HEADER = module.cssPrefix.child('display-category-header');
+const CSS_DISPLAY_CATEGORY_ENTRIES = module.cssPrefix.child('display-category-entries');
+
+const CSS_ACTIVATION_CATEGORY_WRAPPER = module.cssPrefix.child('activation-category-wrapper');
+const CSS_ACTIVATION_CATEGORY_HEADER = module.cssPrefix.child('activation-category-header');
+const CSS_ACTIVATION_CATEGORY_ENTRIES = module.cssPrefix.child('activation-category-entries');
+
+const CSS_SPELL_SUB_CATEGORY_WRAPPER = module.cssPrefix.child('spell-sub-category-wrapper');
+const CSS_SPELL_SUB_CATEGORY_HEADER = module.cssPrefix.child('spell-sub-category-header');
+const CSS_SPELL_SUB_CATEGORY_ENTRIES = module.cssPrefix.child('spell-sub-category-entries');
 
 const actionsOuterContainer = document.createElement('div');
 actionsOuterContainer.classList.add(CSS_OUTER_CONTAINER);
@@ -32,104 +39,64 @@ export const hideTokenActions = () => {
   emptyNode(actionsContainer);
 };
 
-const COLLAPSED_CATEGORIES_FLAG = 'collapsedCategories';
+const COLLAPSED_FLAG = 'collapsed';
 
-const createCategoryContainer = (activationCategory: ActivationCategory, actor: dnd5e.documents.Actor5e) => {
-  const activationCategoryContainer = document.createElement('div');
-  activationCategoryContainer.classList.add(CSS_ACTIVATION_CATEGORY);
+function createCollapsibleContainer(
+    title: string,
+    key: string,
+    actor: dnd5e.documents.Actor5e,
+    parent: HTMLElement,
+    headerLevel: 'div',
+    wrapperClass: string,
+    headerClass: string,
+    entriesClass: string
+): HTMLElement {
+    const wrapper = document.createElement('div');
+    wrapper.classList.add(wrapperClass);
+    parent.appendChild(wrapper);
 
-  const categoryKey = activationCategory.name;
-  const actionType = categoryKey.split('.').pop() || 'UNDEFINED';
+    const collapsedData = (actor.getFlag(module.id, COLLAPSED_FLAG) || {}) as Record<string, {isCollapsed: boolean}>;
+    
+    // DEBUG: Log state retrieval before applying class
+    const isInitiallyCollapsed = foundry.utils.getProperty(collapsedData, `${key}.isCollapsed`) ?? false;
 
-  const collapsedCategories = (actor.getFlag(module.id, COLLAPSED_CATEGORIES_FLAG) || {}) as Record<string, { state: boolean }>;
-  if (collapsedCategories[actionType]?.state) {
-    activationCategoryContainer.classList.add(CSS_COLLAPSED);
-  }
+    if (isInitiallyCollapsed) {
+        wrapper.classList.add(CSS_COLLAPSED);
+    }
 
-  const categoryTitle = game.i18n.localize(categoryKey);
-  const titleElement = document.createElement('div');
-  titleElement.setAttribute('data-testid', 'categoryTitle');
-  titleElement.classList.add(CSS_ACTIVATION_CATEGORY_NAME);
-  titleElement.appendChild(document.createTextNode(categoryTitle));
+    const header = document.createElement(headerLevel);
+    header.classList.add(headerClass);
+    header.textContent = title;
+    wrapper.appendChild(header);
 
-  titleElement.addEventListener('click', async () => {
-    const isCollapsed = activationCategoryContainer.classList.toggle(CSS_COLLAPSED);
-    const collapsedCategories = (actor.getFlag(module.id, COLLAPSED_CATEGORIES_FLAG) || {}) as Record<string, { state: boolean }>;
-    // Update the collapsed state for the category
-    if (!collapsedCategories[actionType]) { collapsedCategories[actionType] = { state: isCollapsed }; }
-    else collapsedCategories[actionType].state = isCollapsed;
-    // Store the updated collapsed state
-    await actor.setFlag(module.id, COLLAPSED_CATEGORIES_FLAG, collapsedCategories);
-  });
+    header.addEventListener('click', async () => {
+        const isCollapsed = wrapper.classList.toggle(CSS_COLLAPSED);
+        let collapsedData = (actor.getFlag(module.id, COLLAPSED_FLAG) || {}) as Record<string, {isCollapsed: boolean}>;
+        foundry.utils.mergeObject(collapsedData, {[`${key}.isCollapsed`]: isCollapsed});
+        await actor.setFlag(module.id, COLLAPSED_FLAG, collapsedData);
+    });
 
-  activationCategoryContainer.appendChild(titleElement);
-  actionsContainer.appendChild(activationCategoryContainer);
+    const entriesContainer = document.createElement('div');
+    entriesContainer.classList.add(entriesClass);
+    wrapper.appendChild(entriesContainer);
 
-  const actionEntriesContainer = document.createElement('div');
-  actionEntriesContainer.classList.add(CSS_ACTION_ENTRIES);
-  activationCategoryContainer.appendChild(actionEntriesContainer);
+    return entriesContainer;
+}
 
-  return { categoryContainer: activationCategoryContainer, entriesContainer: actionEntriesContainer };
+const getDisplayCategoryName = (displayCategory: DisplayCategory) => {
+  return module.localize(displayCategory.name);
 };
 
-const createSubsectionContainer = (
-  subsectionKey: string,
-  activationCategory: ActivationCategory,
-  actor: dnd5e.documents.Actor5e,
-  parent: HTMLElement
-): HTMLElement => {
-  const subsectionWrapper = document.createElement('div');
-  subsectionWrapper.classList.add(CSS_SUBSECTION_WRAPPER);
-  parent.appendChild(subsectionWrapper);
-
-  const categoryKey = activationCategory.name;
-  const actionType = categoryKey.split('.').pop() || 'UNDEFINED';
-
-  const collapsedCategories = (actor.getFlag(module.id, COLLAPSED_CATEGORIES_FLAG) || {}) as Record<string, Record<string, { state: boolean }>>;
-  if (!collapsedCategories[actionType]) collapsedCategories[actionType] = {};
-  if (!collapsedCategories[actionType][subsectionKey]) collapsedCategories[actionType][subsectionKey] = { state: true };
-  else if (collapsedCategories[actionType][subsectionKey]?.state) {
-    subsectionWrapper.classList.add(CSS_COLLAPSED);
-  }
-
-  const subsectionHeader = document.createElement('div');
-  subsectionHeader.classList.add(CSS_SUBSECTION_HEADER);
-  subsectionHeader.textContent = subsectionKey;
-  subsectionWrapper.appendChild(subsectionHeader);
-
-  subsectionHeader.addEventListener('click', async () => {
-    const isCollapsed = subsectionWrapper.classList.toggle(CSS_COLLAPSED);
-    const collapsedCategories = (actor.getFlag(module.id, COLLAPSED_CATEGORIES_FLAG) || {}) as Record<string, Record<string, { state: boolean }>>;
-    // Update the collapsed state for the category
-    if (!collapsedCategories[actionType]) collapsedCategories[actionType] = {};
-    if (!collapsedCategories[actionType][subsectionKey]) collapsedCategories[actionType][subsectionKey] = { state: isCollapsed };
-    else collapsedCategories[actionType][subsectionKey].state = isCollapsed;
-    // Store the updated collapsed state
-    await actor.setFlag(module.id, COLLAPSED_CATEGORIES_FLAG, collapsedCategories);
-  });
-
-  const subsectionContainer = document.createElement('div');
-  subsectionContainer.classList.add(CSS_SUBSECTION_ENTRIES);
-  subsectionWrapper.appendChild(subsectionContainer);
-
-  return subsectionContainer;
+const getActivationCategoryName = (activationCategory: ActivationCategory) => {
+  return module.localize(activationCategory.name);
 };
 
-const getTypeCategoryName = (typeCategory: TypeCategory) => {
-  const sort = typeCategory.sort;
-  if (sort === TYPE_CATEGORY.weapon.sort || sort === TYPE_CATEGORY.equipment.sort || sort === TYPE_CATEGORY.consumable.sort) {
-    return module.localize('type_item');
-  }
-  if (sort === TYPE_CATEGORY.feature.sort) {
-    return module.localize('type_feature');
-  }
-  if (sort === TYPE_CATEGORY.spell.sort) {
-    return module.localize('type_spell');
-  }
-  if (sort === TYPE_CATEGORY.other.sort) {
-    return module.localize('type_other');
-  }
-  return '';
+const getSpellSubcategoryName = (spellSubcategory: SpellSubcategory) => {
+    let name = spellSubcategory.displayName;
+    if (spellSubcategory.slots) {
+        name = `(${spellSubcategory.slots.available} / ${spellSubcategory.slots.maximum}) ${name}`;
+    }
+    return name;
 };
 
 const isShownForActorType = (actor: dnd5e.documents.Actor5e) => {
@@ -174,48 +141,84 @@ export const showTokenActions = (token?: Token | null) => {
     noActions.appendChild(document.createTextNode(module.localize('no-actions')));
     actionsContainer.appendChild(noActions);
   } else {
-    module.logger.debug('showTokenActions() -> true:', actions);
+    const zeroSlotSpellSubcategories = new Set<string>();
+    if (!ShowZeroUsesRemainActions.get()) {
+        for (const action of actions) {
+            if (action.category.spell?.slots?.available === 0) {
+                zeroSlotSpellSubcategories.add(action.category.spell.name);
+            }
+        }
+    }
+
+    const filteredActions = actions.filter(action => 
+        !action.category.spell || !zeroSlotSpellSubcategories.has(action.category.spell.name)
+    );
+
+    if (filteredActions.length === 0) {
+        const noActions = document.createElement('div');
+        noActions.classList.add(CSS_NO_ACTIONS);
+        noActions.appendChild(document.createTextNode(module.localize('no-actions')));
+        actionsContainer.appendChild(noActions);
+        return true;
+    }
+
+    module.logger.debug('showTokenActions() -> true:', filteredActions);
+    let lastDisplayCategory: DisplayCategory | null = null;
+    let displayCategoryEntries: HTMLElement | null = null;
+
     let lastActivationCategory: ActivationCategory | null = null;
-    let actionEntriesContainer: HTMLElement | null = null;
+    let activationCategoryEntries: HTMLElement | null = null;
 
-    let lastTypeCategoryName: string | null = null;
-    let subsectionEntriesContainer: HTMLElement | null = null;
+    let lastSpellSubcategory: SpellSubcategory | null = null;
+    let spellSubcategoryEntries: HTMLElement | null = null;
 
-    for (const action of actions) {
-      if (action.activationCategory !== lastActivationCategory) {
-        lastActivationCategory = action.activationCategory;
-        const containers = createCategoryContainer(action.activationCategory, actor);
-        actionEntriesContainer = containers.entriesContainer;
-        lastTypeCategoryName = null;
-      }
+    for (const action of filteredActions) {
+        if (action.category.display.name !== lastDisplayCategory?.name) {
+            lastDisplayCategory = action.category.display;
+            const displayCategoryName = getDisplayCategoryName(action.category.display);
+            
+            // Display Category is the outermost level
+            const key = action.category.display.name; 
+            displayCategoryEntries = createCollapsibleContainer(displayCategoryName, key, actor, actionsContainer, 'div', CSS_DISPLAY_CATEGORY_WRAPPER, CSS_DISPLAY_CATEGORY_HEADER, CSS_DISPLAY_CATEGORY_ENTRIES);
+            
+            lastActivationCategory = null;
+            lastSpellSubcategory = null;
+        }
 
-      const activationCategoryName = action.activationCategory.name;
-      const noSubsections =
-        activationCategoryName === 'illandril-npc-quick-actions.activation_legendary' ||
-        activationCategoryName === 'illandril-npc-quick-actions.activation_legendaryResistance';
+        if (action.category.display.name === DISPLAY_CATEGORY.spell.name && action.category.spell) {
+            // Spell Subcategory (e.g., Cantrips, 1st Level, Innate)
+            if (action.category.spell.name !== lastSpellSubcategory?.name) {
+                lastSpellSubcategory = action.category.spell;
+                const spellSubcategoryName = getSpellSubcategoryName(action.category.spell);
+                // Nested key using a dot (which is the source of the issue)
+                const key = `${lastDisplayCategory!.name}.${lastSpellSubcategory.name}`; 
+                spellSubcategoryEntries = createCollapsibleContainer(spellSubcategoryName, key, actor, displayCategoryEntries!, 'div', CSS_SPELL_SUB_CATEGORY_WRAPPER, CSS_SPELL_SUB_CATEGORY_HEADER, CSS_SPELL_SUB_CATEGORY_ENTRIES);
+                lastActivationCategory = null;
+            }
 
-      if (noSubsections) {
-        actionEntriesContainer.appendChild(getActionRow(action));
-        continue;
-      }
-
-      const typeCategoryName = getTypeCategoryName(action.typeCategory);
-
-      if (typeCategoryName && typeCategoryName !== lastTypeCategoryName) {
-        lastTypeCategoryName = typeCategoryName;
-        subsectionEntriesContainer = createSubsectionContainer(
-          typeCategoryName,
-          action.activationCategory,
-          actor,
-          actionEntriesContainer
-        );
-      }
-
-      subsectionEntriesContainer?.appendChild(getActionRow(action));
+            // Activation Category (e.g., Action, Bonus Action) inside a Spell Subcategory
+            if (action.category.action.name !== lastActivationCategory?.name) {
+                lastActivationCategory = action.category.action;
+                const activationCategoryName = getActivationCategoryName(action.category.action);
+                // Deeply nested key using dots (which is the source of the issue)
+                const key = `${lastDisplayCategory!.name}.${lastSpellSubcategory!.name}.${lastActivationCategory.name}`;
+                activationCategoryEntries = createCollapsibleContainer(activationCategoryName, key, actor, spellSubcategoryEntries!, 'div', CSS_ACTIVATION_CATEGORY_WRAPPER, CSS_ACTIVATION_CATEGORY_HEADER, CSS_ACTIVATION_CATEGORY_ENTRIES);
+            }
+            activationCategoryEntries!.appendChild(getActionRow(action));
+        } else {
+            // Activation Category (e.g., Action, Bonus Action) for non-spells (Items, Features, etc.)
+            if (action.category.action.name !== lastActivationCategory?.name) {
+                lastActivationCategory = action.category.action;
+                const activationCategoryName = getActivationCategoryName(action.category.action);
+                // Nested key using a dot (which is the source of the issue)
+                const key = `${lastDisplayCategory!.name}.${lastActivationCategory.name}`;
+                activationCategoryEntries = createCollapsibleContainer(activationCategoryName, key, actor, displayCategoryEntries!, 'div', CSS_ACTIVATION_CATEGORY_WRAPPER, CSS_ACTIVATION_CATEGORY_HEADER, CSS_ACTIVATION_CATEGORY_ENTRIES);
+            }
+            activationCategoryEntries!.appendChild(getActionRow(action));
+        }
     }
   }
-
-  repositionActionsOuterContainer(token);
+  repositionActionsOuterContainer(token as Token);
 
   return true;
 };

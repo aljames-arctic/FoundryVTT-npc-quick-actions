@@ -22,64 +22,77 @@
   overflow-y: auto;
 }
 
-.illandril-npc-quick-actions--activationCategory {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.illandril-npc-quick-actions--activationCategory-name {
-    font-weight: bold;
-    color: rgba(0, 0, 100, 0.8);
+.illandril-npc-quick-actions--display-category-header,
+.illandril-npc-quick-actions--activation-category-header,
+.illandril-npc-quick-actions--spell-sub-category-header {
     cursor: pointer;
     user-select: none;
     display: flex;
     align-items: center;
 }
 
-.illandril-npc-quick-actions--activationCategory-name::before {
+.illandril-npc-quick-actions--display-category-header::before,
+.illandril-npc-quick-actions--activation-category-header::before,
+.illandril-npc-quick-actions--spell-sub-category-header::before {
     content: "[-]";
     margin-right: 5px;
     font-weight: normal;
 }
 
-.illandril-npc-quick-actions--collapsed .illandril-npc-quick-actions--activationCategory-name::before {
+.illandril-npc-quick-actions--collapsed > .illandril-npc-quick-actions--display-category-header::before,
+.illandril-npc-quick-actions--collapsed > .illandril-npc-quick-actions--activation-category-header::before,
+.illandril-npc-quick-actions--collapsed > .illandril-npc-quick-actions--spell-sub-category-header::before {
     content: "[+]";
 }
 
-.illandril-npc-quick-actions--collapsed .illandril-npc-quick-actions--action-entries {
+.illandril-npc-quick-actions--collapsed > .illandril-npc-quick-actions--display-category-entries,
+.illandril-npc-quick-actions--collapsed > .illandril-npc-quick-actions--activation-category-entries,
+.illandril-npc-quick-actions--collapsed > .illandril-npc-quick-actions--spell-sub-category-entries {
     display: none;
 }
 
-.illandril-npc-quick-actions--subsection-header {
-    font-weight: bold;
-    color: rgba(0, 0, 100, 0.7);
-    cursor: pointer;
-    user-select: none;
-    display: flex;
-    align-items: center;
-    margin-top: 4px;
-    padding-left: 10px;
+.illandril-npc-quick-actions--display-category-header {
+  font-weight: bold;
+  color: rgba(0, 0, 100, 0.9);
 }
 
-.illandril-npc-quick-actions--subsection-header::before {
-    content: "[-]";
-    margin-right: 5px;
-    font-weight: normal;
+.illandril-npc-quick-actions--spell-sub-category-header {
+  font-weight: bold;
+  color: rgba(0, 0, 100, 0.8);
+  padding-left: 10px;
 }
 
-.illandril-npc-quick-actions--collapsed > .illandril-npc-quick-actions--subsection-header::before {
-    content: "[+]";
+.illandril-npc-quick-actions--activation-category-header {
+  font-weight: bold;
+  color: rgba(0, 0, 100, 0.7);
+  padding-left: 10px;
 }
 
-.illandril-npc-quick-actions--collapsed > .illandril-npc-quick-actions--subsection-entries {
-    display: none;
+.illandril-npc-quick-actions--spell-sub-category-wrapper .illandril-npc-quick-actions--activation-category-header {
+    padding-left: 20px;
+}
+
+.illandril-npc-quick-actions--activation-category-wrapper,
+.illandril-npc-quick-actions--spell-sub-category-wrapper {
+  margin-top: 4px;
 }
 
 .illandril-npc-quick-actions--entry {
   cursor: pointer;
   opacity: 0.75;
   padding-left: 20px;
+}
+
+.illandril-npc-quick-actions--spell-sub-category-entries .illandril-npc-quick-actions--entry {
+  padding-left: 30px;
+}
+
+.illandril-npc-quick-actions--activation-category-entries .illandril-npc-quick-actions--entry {
+    padding-left: 30px;
+}
+
+.illandril-npc-quick-actions--spell-sub-category-entries .illandril-npc-quick-actions--activation-category-entries .illandril-npc-quick-actions--entry {
+    padding-left: 40px;
 }
 
 .illandril-npc-quick-actions--entry:hover {

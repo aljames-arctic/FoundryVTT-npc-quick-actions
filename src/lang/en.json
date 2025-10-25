@@ -32,12 +32,19 @@
     "activation_action": "Actions",
     "activation_bonus": "Bonus Actions",
     "activation_reaction": "Reactions",
+    "activation_mixed": "Mixed Actions",
     "activation_legendary": "Legendary Actions",
     "activation_legendaryResistance": "Legendary Resistances",
     "activation_lair": "Lair Actions",
     "activation_special": "Special Actions",
     "activation_crew": "Crew Actions",
     "activation_new-turn": "Start of Turn",
+    "display_item": "Items",
+    "display_feature": "Feats",
+    "display_spell": "Spells",
+    "display_other": "Other",
+    "display_legendary": "Legendary Traits",
+    "display_lair": "Lair Actions",
     "reset-for-new-turn": "Reset Actions for New Turn",
     "legendary-actions-reset": "*Legendary Actions have been reset*",
 
@@ -50,13 +57,13 @@
     "type_spell": "Spells",
 
     "spell-abbr": {
-      "pact": "P",
-      "cantrip": "C",
-      "innate": "I",
-      "atwill": "W",
-      "ritual": "R",
+      "pact": "Pact Magic",
+      "cantrip": "Cantrips",
+      "innate": "Innate",
+      "atwill-ritual": "At Will / Ritual",
       "unknown": "?"
     },
+    "spell-level-label": "Level",
     "recharge-roll": "Recharge Roll",
     "recharge-success": "☑",
     "recharge-fail": "☒"
