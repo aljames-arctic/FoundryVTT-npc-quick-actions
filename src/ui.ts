@@ -189,6 +189,16 @@ export const showTokenActions = (token?: Token | null) => {
         lastTypeCategoryName = null;
       }
 
+      const activationCategoryName = action.activationCategory.name;
+      const noSubsections =
+        activationCategoryName === 'illandril-npc-quick-actions.activation_legendary' ||
+        activationCategoryName === 'illandril-npc-quick-actions.activation_legendaryResistance';
+
+      if (noSubsections) {
+        actionEntriesContainer.appendChild(getActionRow(action));
+        continue;
+      }
+
       const typeCategoryName = getTypeCategoryName(action.typeCategory);
 
       if (typeCategoryName && typeCategoryName !== lastTypeCategoryName) {
