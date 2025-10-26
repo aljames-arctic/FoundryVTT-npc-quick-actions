@@ -31,7 +31,6 @@ export type SpellSubcategory = {
   level: number;
   slots?: { available: number; maximum: number };
 };
-
 const SPELL_SUBCATEGORY = {
     pact: { name: 'spell_pact', sort: 0 },
     atwill: { name: 'spell_atwill', sort: 1 },
@@ -53,31 +52,30 @@ export type DisplayCategory = {
   sort: number;
   name: string;
 };
-
 export const DISPLAY_CATEGORY = {
   item: { sort: 1, name: 'display_item' },
   feature: { sort: 2, name: 'display_feature' },
   spell: { sort: 3, name: 'display_spell' },
-  other: { sort: 4, name: 'display_other' },
-  legendary: { sort: 5, name: 'display_legendary' },
-  lair: { sort: 6, name: 'display_lair' },
+  special: { sort: 4, name: 'display_special' },
+  other: { sort: 5, name: 'display_other' },
 };
 
 export type ActivationCategory = {
   sort: number;
   name: string;
 };
-const ACTIVATION_CATEGORY = {
-  action: { sort: 1, name: 'activation_action' },
-  bonus: { sort: 2, name: 'activation_bonus' },
-  reaction: { sort: 3, name: 'activation_reaction' },
-  mixed: { sort: 3.5, name: 'activation_mixed' },
-  legendary: { sort: 4, name: 'activation_legendary' },
-  legendaryResistance: { sort: 5, name: 'activation_legendaryResistance' },
-  lair: { sort: 6, name: 'activation_lair' },
-  special: { sort: 7, name: 'activation_special' },
-  crew: { sort: 8, name: 'activation_crew' },
-  newTurn: { sort: 99, name: 'activation_newTurn' },
+export const ACTIVATION_CATEGORY: Record<string, ActivationCategory> = {
+    action: { name: 'activation_action', sort: 0 },
+    bonus: { name: 'activation_bonus', sort: 1 },
+    reaction: { name: 'activation_reaction', sort: 2 },
+    mixed: { name: 'activation_mixed', sort: 3 },
+    mythic: { name: 'activation_mythic', sort: 4 },
+    legendaryAction: { name: 'activation_legendaryAction', sort: 5 },
+    legendaryResist: { name: 'activation_legendaryResist', sort: 6 },
+    lair: { name: 'activation_lair', sort: 7 },
+    special: { name: 'activation_special', sort: 8 },
+    crew: { name: 'activation_crew', sort: 9 },
+    newTurn: { name: 'activation_new-turn', sort: 10 },
 };
 
 type TypeCategory = {
@@ -118,25 +116,36 @@ const ITEM_TYPE_MAPPING: Record<string, TypeCategory> = {
 
 const getActivationCategoryFromType = (activationType: string | undefined): ActivationCategory | null => {
     if (!activationType) { return null; }
-    const key = activationType.toLowerCase(); 
+    const key = activationType.toLowerCase();
     return ACTIVATION_CATEGORY[key as keyof typeof ACTIVATION_CATEGORY] ?? null;
 };
 
+const isLegendaryAction = (activity: any): boolean => {
+    return ["legendary"].includes(activity?.activation?.type); // Technically could have named the map "legendary" but I don't like that...
+};
+
+const isLegendaryResistance = (activity: any): boolean => {
+    if (!["special"].includes(activity?.activation?.type)) { return false; } // Legendary Resistances are "Special" activities
+    return activity?.consumption?.targets?.some((target: any) => target?.target === 'resources.legres.value');
+};
+
 const getActivationCategoryFromActivity = (activity: any): ActivationCategory | null => {
-  if (activity?.consumption?.targets?.some((target: any) => target?.target === 'resources.legres.value')) {
-    return ACTIVATION_CATEGORY.legendaryResistance;
-  }
+  // Oddball cases... for various reasons
+  if (isLegendaryAction(activity)) { return ACTIVATION_CATEGORY.legendaryAction; }
+  if (isLegendaryResistance(activity)) { return ACTIVATION_CATEGORY.legendaryResist; }
+
+  // If it consumes both ... you're just weird and I don't support your game choices.
+  // However, if it is neither, it falls back to the standard activation type.
   return getActivationCategoryFromType(activity?.activation?.type);
 };
 
 function getDisplayCategory(typeCategory: TypeCategory, activationCategory: ActivationCategory): DisplayCategory {
     switch (activationCategory.name) {
-        case ACTIVATION_CATEGORY.legendary.name:
-        case ACTIVATION_CATEGORY.legendaryResistance.name:
-            return DISPLAY_CATEGORY.legendary;
+        case ACTIVATION_CATEGORY.legendaryAction.name:
+        case ACTIVATION_CATEGORY.legendaryResist.name:
+        case ACTIVATION_CATEGORY.mythic.name:
         case ACTIVATION_CATEGORY.lair.name:
-            return DISPLAY_CATEGORY.lair;
-    }
+            return DISPLAY_CATEGORY.special;    }
 
     switch (typeCategory.name) {
         case TYPE_CATEGORY.weapon.name:
@@ -276,14 +285,17 @@ const categorizeItem = (item: Item): ItemCategoryData | null => {
 
 // Returns all categories for the activities of an item
 const categorizeActivities = (item: Item): ActivationCategory[] => {
-  // INDIVIDUALLY REVIEWED AND APPROVED
   const activities = item?.system?.activities?.entries() ?? [];
   const uniqueActivities = new Map<string, ActivationCategory>();
   for (const [_, activity] of activities) {
     const currentCategory = getActivationCategoryFromActivity(activity);
     if (currentCategory) {
+        if (currentCategory.name === ACTIVATION_CATEGORY.lair.name) {
+            if (!foundry.utils.getProperty(item.actor, 'system.resources.lair.inside')) continue;
+        }
+
         if (!uniqueActivities.has(currentCategory.name)) {
-            uniqueActivities.set(currentCategory.name, currentCategory);
+          uniqueActivities.set(currentCategory.name, currentCategory);
         }
     }
   }
@@ -293,7 +305,6 @@ const categorizeActivities = (item: Item): ActivationCategory[] => {
 // --- Filtering Helpers ---
 
 const hasNoFavoritesOrIsInFavorites = (actor: Actor, item: Item): boolean => {
-    // INDIVIDUALLY REVIEWED AND APPROVED
     if (!('favorites' in actor.system)) return true;
     const favorites = actor.system.favorites;
     if (!favorites?.length) return true;
@@ -303,20 +314,41 @@ const hasNoFavoritesOrIsInFavorites = (actor: Actor, item: Item): boolean => {
 // --- Action Construction Helpers ---
 
 const getActionNameWithUses = (item: Item): string | null => {
-    // INDIVIDUALLY REVIEWED AND APPROVED
     const uses = ItemSystem.calculateUsesForItem(item);
-    if (!uses) { return item.name; }
+    let name = item.name;
+
+    const activities = item?.system?.activities?.entries() ?? [];
+    for (const [_, activity] of activities) {
+        let resourceConsumed = null;
+        // Only handle Legendary Actions and Legendary Resistances
+        // Legendary Actions (legendary type)
+        // Legendary Resistances (special type)
+        if (!["legendary", "special"].includes(activity?.activation?.type)) { continue; }
+        for (const target of activity?.consumption?.targets ?? []) {
+            switch (target?.target) {
+                case 'resources.legres.value':
+                case 'resources.legact.value':
+                    resourceConsumed = target?.value;
+                    if (!resourceConsumed) module.logger.warn(`Resource consumed is undefined for activity ${activity.name} in item ${item.name} (${item.id}})`);
+                    name = `[${resourceConsumed ?? "?"}] ${name}`
+                    break;
+            }
+        }
+        if (resourceConsumed) { break; }
+    }
+
+    if (!uses) { return name; }
     
     // For spells, only show the usage count for At Will, Ritual, and Innate, 
     // as spell slot count is handled in the Spell Subcategory header.
     if (item.type === "spell") {
         const method = item.system.method;
         // If the method is 'spell' (uses slots) or 'pact' (uses pact slots), don't show uses here.
-        if (!method || ['spell', 'pact'].includes(method)) { return item.name; }
+        if (!method || ['spell', 'pact'].includes(method)) { return name; }
     }
 
     let usageCount = (uses.maximum) ? `${uses.available} / ${uses.maximum}` : `${uses.available}`;
-    return `${item.name} (${usageCount})`;
+    return `${name} (${usageCount})`;
 };
 
 const getActionForItem = (actor: Actor, item: Item): Action | null => {
@@ -336,7 +368,7 @@ const getActionForItem = (actor: Actor, item: Item): Action | null => {
 
   const activationCategory = (activationCategories.length > 1) ? ACTIVATION_CATEGORY.mixed : activationCategories[0];
   const displayCategory = getDisplayCategory(itemCategoryData.typeCategory, activationCategory);
-  
+
   const category: Category = {
       display: displayCategory,
       action: activationCategory,
@@ -359,7 +391,6 @@ const getActionForItem = (actor: Actor, item: Item): Action | null => {
 // --- Main Exported Function ---
 
 export const getTokenActions = (actor: Actor) => {
-  // INDIVIDUALLY REVIEWED AND APPROVED
   if (!actor) { return null;}
   const actions: Action[] = [];
   

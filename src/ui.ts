@@ -1,6 +1,6 @@
 // ui.ts
 import module from './module';
-import { type Action, type ActivationCategory, getTokenActions, type SpellSubcategory, type DisplayCategory, DISPLAY_CATEGORY, type Category } from './quick-actions';
+import { type Action, type ActivationCategory, getTokenActions, type SpellSubcategory, type DisplayCategory, DISPLAY_CATEGORY, ACTIVATION_CATEGORY, type Category } from './quick-actions';
 import { MinimumRole, ShowForNPCActors, ShowForPCActors, ShowForVehicleActors, ShowZeroUsesRemainActions } from './settings';
 
 const CSS_ACTIVE = module.cssPrefix.child('active');
@@ -91,12 +91,32 @@ const getActivationCategoryName = (activationCategory: ActivationCategory) => {
   return module.localize(activationCategory.name);
 };
 
-const getSpellSubcategoryName = (spellSubcategory: SpellSubcategory) => {
-    let displayName = spellSubcategory.displayName;
-    if (spellSubcategory.slots) {
-        displayName = `${displayName} (${spellSubcategory.slots.available} / ${spellSubcategory.slots.maximum})`;
+const getActivationCategoryNameWithUses = (
+    category: SpellSubcategory | ActivationCategory,
+    actor: dnd5e.documents.Actor5e
+) => {
+    if ('level' in category) { // It's a SpellSubcategory
+        const spellSubcategory = category as SpellSubcategory;
+        let displayName = spellSubcategory.displayName;
+        if (spellSubcategory.slots) {
+            displayName = `${displayName} (${spellSubcategory.slots.available} / ${spellSubcategory.slots.maximum})`;
+        }
+        return displayName;
+    } else { // It's an ActivationCategory
+        const activationCategory = category as ActivationCategory;
+        let displayName = getActivationCategoryName(activationCategory);
+        switch (activationCategory.name) {
+            case ACTIVATION_CATEGORY.legendaryAction.name:
+                const legact = actor.system.resources.legact;
+                if (legact && legact.max > 0) displayName = `${displayName} (${legact.value} / ${legact.max})`;
+                break;
+            case ACTIVATION_CATEGORY.legendaryResist.name:
+                const legres = actor.system.resources.legres;
+                if (legres && legres.max > 0) displayName = `${displayName} (${legres.value} / ${legres.max})`;
+                break;
+        }
+        return displayName;
     }
-    return displayName;
 };
 
 const isShownForActorType = (actor: dnd5e.documents.Actor5e) => {
@@ -189,7 +209,7 @@ export const showTokenActions = (token?: Token | null) => {
             // Spell Subcategory (e.g., Cantrips, 1st Level, Innate)
             if (action.category.spell.name !== lastSpellSubcategory?.name) {
                 lastSpellSubcategory = action.category.spell;
-                const spellSubcategoryName = getSpellSubcategoryName(action.category.spell);
+                const spellSubcategoryName = getActivationCategoryNameWithUses(action.category.spell, actor);
                 // Nested key using a dot (which is the source of the issue)
                 const key = `${lastDisplayCategory!.name}.${lastSpellSubcategory.name}`; 
                 spellSubcategoryEntries = createCollapsibleContainer(spellSubcategoryName, key, actor, displayCategoryEntries!, 'div', CSS_SPELL_SUB_CATEGORY_WRAPPER, CSS_SPELL_SUB_CATEGORY_HEADER, CSS_SPELL_SUB_CATEGORY_ENTRIES);
@@ -209,7 +229,7 @@ export const showTokenActions = (token?: Token | null) => {
             // Activation Category (e.g., Action, Bonus Action) for non-spells (Items, Features, etc.)
             if (action.category.action.name !== lastActivationCategory?.name) {
                 lastActivationCategory = action.category.action;
-                const activationCategoryName = getActivationCategoryName(action.category.action);
+                const activationCategoryName = getActivationCategoryNameWithUses(action.category.action, actor);
                 // Nested key using a dot (which is the source of the issue)
                 const key = `${lastDisplayCategory!.name}.${lastActivationCategory.name}`;
                 activationCategoryEntries = createCollapsibleContainer(activationCategoryName, key, actor, displayCategoryEntries!, 'div', CSS_ACTIVATION_CATEGORY_WRAPPER, CSS_ACTIVATION_CATEGORY_HEADER, CSS_ACTIVATION_CATEGORY_ENTRIES);
