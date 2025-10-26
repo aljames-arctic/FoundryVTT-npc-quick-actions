@@ -119,6 +119,25 @@ const getActivationCategoryNameWithUses = (
     }
 };
 
+const calculateUpcastSlots = (actor: dnd5e.documents.Actor5e): Map<number, number> => {
+  const actorSpells = actor.system.spells;
+  const upcastSlots = new Map<number, number>();
+
+  const pactValue = actorSpells?.pact?.value ?? 0;
+  const pactLevel = actorSpells?.pact?.level ?? 0;
+
+  let runningTotal = 0;
+  for (let level = 9; level >= 1; level--) {
+    runningTotal += actorSpells?.[`spell${level}`]?.value ?? 0;
+    let levelTotal = runningTotal;
+    if (pactValue > 0 && pactLevel >= level) {
+      levelTotal += pactValue;
+    }
+    upcastSlots.set(level, levelTotal);
+  }
+  return upcastSlots;
+}
+
 const isShownForActorType = (actor: dnd5e.documents.Actor5e) => {
   if (actor.type === 'character') {
     return ShowForPCActors.get();
@@ -163,11 +182,15 @@ export const showTokenActions = (token?: Token | null) => {
   } else {
     const zeroSlotSpellSubcategories = new Set<string>();
     if (!ShowZeroUsesRemainActions.get()) {
-        for (const action of actions) {
-            if (action.category.spell?.slots?.available === 0) {
-                zeroSlotSpellSubcategories.add(action.category.spell.name);
-            }
+      const upcastSlots = calculateUpcastSlots(actor);
+      for (const action of actions) {
+        const spellCategory = action.category.spell;
+        if (spellCategory?.slots && spellCategory.level > 0) {
+          if ((upcastSlots.get(spellCategory.level) ?? 0) === 0) {
+            zeroSlotSpellSubcategories.add(spellCategory.name);
+          }
         }
+      }
     }
 
     const filteredActions = actions.filter(action => 
