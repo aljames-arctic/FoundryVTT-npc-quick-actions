@@ -229,25 +229,23 @@ export const showTokenActions = (token?: Token | null) => {
         }
 
         if (action.category.display.name === DISPLAY_CATEGORY.spell.name && action.category.spell) {
-            // Spell Subcategory (e.g., Cantrips, 1st Level, Innate)
-            if (action.category.spell.name !== lastSpellSubcategory?.name) {
-                lastSpellSubcategory = action.category.spell;
-                const spellSubcategoryName = getActivationCategoryNameWithUses(action.category.spell, actor);
-                // Nested key using a dot (which is the source of the issue)
-                const key = `${lastDisplayCategory!.name}.${lastSpellSubcategory.name}`; 
-                spellSubcategoryEntries = createCollapsibleContainer(spellSubcategoryName, key, actor, displayCategoryEntries!, 'div', CSS_SPELL_SUB_CATEGORY_WRAPPER, CSS_SPELL_SUB_CATEGORY_HEADER, CSS_SPELL_SUB_CATEGORY_ENTRIES);
-                lastActivationCategory = null;
-            }
-
-            // Activation Category (e.g., Action, Bonus Action) inside a Spell Subcategory
+            // Activation Category (e.g., Action, Bonus Action)
             if (action.category.action.name !== lastActivationCategory?.name) {
                 lastActivationCategory = action.category.action;
                 const activationCategoryName = getActivationCategoryName(action.category.action);
-                // Deeply nested key using dots (which is the source of the issue)
-                const key = `${lastDisplayCategory!.name}.${lastSpellSubcategory!.name}.${lastActivationCategory.name}`;
-                activationCategoryEntries = createCollapsibleContainer(activationCategoryName, key, actor, spellSubcategoryEntries!, 'div', CSS_ACTIVATION_CATEGORY_WRAPPER, CSS_ACTIVATION_CATEGORY_HEADER, CSS_ACTIVATION_CATEGORY_ENTRIES);
+                const key = `${lastDisplayCategory!.name}.${lastActivationCategory.name}`;
+                activationCategoryEntries = createCollapsibleContainer(activationCategoryName, key, actor, displayCategoryEntries!, 'div', CSS_ACTIVATION_CATEGORY_WRAPPER, CSS_ACTIVATION_CATEGORY_HEADER, CSS_ACTIVATION_CATEGORY_ENTRIES);
+                lastSpellSubcategory = null;
             }
-            activationCategoryEntries!.appendChild(getActionRow(action));
+
+            // Spell Subcategory (e.g., Cantrips, 1st Level, Innate) inside an Activation Category
+            if (action.category.spell.name !== lastSpellSubcategory?.name) {
+                lastSpellSubcategory = action.category.spell;
+                const spellSubcategoryName = getActivationCategoryNameWithUses(action.category.spell, actor);
+                const key = `${lastDisplayCategory!.name}.${lastActivationCategory!.name}.${lastSpellSubcategory.name}`;
+                spellSubcategoryEntries = createCollapsibleContainer(spellSubcategoryName, key, actor, activationCategoryEntries!, 'div', CSS_SPELL_SUB_CATEGORY_WRAPPER, CSS_SPELL_SUB_CATEGORY_HEADER, CSS_SPELL_SUB_CATEGORY_ENTRIES);
+            }
+            spellSubcategoryEntries!.appendChild(getActionRow(action));
         } else {
             // Activation Category (e.g., Action, Bonus Action) for non-spells (Items, Features, etc.)
             if (action.category.action.name !== lastActivationCategory?.name) {

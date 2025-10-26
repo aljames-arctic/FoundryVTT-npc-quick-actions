@@ -404,15 +404,17 @@ export const getTokenActions = (actor: Actor) => {
     const displayCategoryDelta = a.category.display.sort - b.category.display.sort;
     if (displayCategoryDelta !== 0) { return displayCategoryDelta; }
 
-    // Spells: Display -> Spell Sub -> Activation
+    const activationCategoryDelta = a.category.action.sort - b.category.action.sort;
+
     if (a.category.display.name === DISPLAY_CATEGORY.spell.name) {
+      // Spells: Display -> Activation -> Spell Sub
+      if (activationCategoryDelta !== 0) { return activationCategoryDelta; }
       const subcategoryDelta = (a.category.spell?.level ?? 0) - (b.category.spell?.level ?? 0);
       if (subcategoryDelta !== 0) { return subcategoryDelta; }
+    } else {
+      // Non-spells: Display -> Activation
+      if (activationCategoryDelta !== 0) { return activationCategoryDelta; }
     }
-    
-    // Non-spells: Display -> Activation
-    const activationCategoryDelta = a.category.action.sort - b.category.action.sort;
-    if (activationCategoryDelta !== 0) { return activationCategoryDelta; }
 
     return caseInsensitiveCompare(a.name, b.name);
   });
