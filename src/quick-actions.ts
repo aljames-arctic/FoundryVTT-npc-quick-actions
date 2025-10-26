@@ -306,11 +306,13 @@ const getActionNameWithUses = (item: Item): string | null => {
     // INDIVIDUALLY REVIEWED AND APPROVED
     const uses = ItemSystem.calculateUsesForItem(item);
     if (!uses) { return item.name; }
-    if (item.type == "spell") {     // Only show count for atwill / ritual / innate
-        if (["pact", "spell", undefined].includes(item.method)) { return item.name; }
-    }
-    if (!ShowZeroUsesRemainActions.get()) { 
-        if (uses.available === 0) { return null; }
+    
+    // For spells, only show the usage count for At Will, Ritual, and Innate, 
+    // as spell slot count is handled in the Spell Subcategory header.
+    if (item.type === "spell") {
+        const method = item.system.method;
+        // If the method is 'spell' (uses slots) or 'pact' (uses pact slots), don't show uses here.
+        if (!method || ['spell', 'pact'].includes(method)) { return item.name; }
     }
 
     let usageCount = (uses.maximum) ? `${uses.available} / ${uses.maximum}` : `${uses.available}`;

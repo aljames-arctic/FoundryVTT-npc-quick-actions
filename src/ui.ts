@@ -92,11 +92,11 @@ const getActivationCategoryName = (activationCategory: ActivationCategory) => {
 };
 
 const getSpellSubcategoryName = (spellSubcategory: SpellSubcategory) => {
-    let name = spellSubcategory.displayName;
+    let displayName = spellSubcategory.displayName;
     if (spellSubcategory.slots) {
-        name = `(${spellSubcategory.slots.available} / ${spellSubcategory.slots.maximum}) ${name}`;
+        displayName = `${displayName} (${spellSubcategory.slots.available} / ${spellSubcategory.slots.maximum})`;
     }
-    return name;
+    return displayName;
 };
 
 const isShownForActorType = (actor: dnd5e.documents.Actor5e) => {
