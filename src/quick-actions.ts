@@ -1,6 +1,6 @@
 import * as ItemSystem from './item-system';
 import module from './module';
-import { ShowOnlyFavorites, ShowZeroUsesRemainActions, showUnequippedItems, showUnpreparedSpells } from './settings';
+import { ShowOnlyFavorites, ShowItemsInContainers, showUnequippedItems, showUnpreparedSpells } from './settings';
 
 // --- Utility Functions ---
 
@@ -354,6 +354,10 @@ const getActionNameWithUses = (item: Item): string | null => {
 const getActionForItem = (actor: Actor, item: Item): Action | null => {
   if (ShowOnlyFavorites.get()) { // Module setting to show only favorite items
     if (!hasNoFavoritesOrIsInFavorites(actor, item)) { return null; }
+  }
+
+  if (!ShowItemsInContainers.get()) {           // Do we want to list items in containers?
+    if (item.system.container) { return null; } // Has a non-null container property, so it's in a container
   }
   
   const itemCategoryData = categorizeItem(item);

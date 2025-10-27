@@ -32,6 +32,10 @@ export const ShowOnlyFavorites = module.settings.register('showOnlyFavorites', B
   hasHint: true,
 });
 
+export const ShowItemsInContainers = module.settings.register('showItemsInContainers', Boolean, false, {
+  hasHint: true,
+});
+
 const ShowUnpreparedNPCSpells = module.settings.register('showUnpreparedNPCSpells', Boolean, false, {
   hasHint: true,
 });
@@ -54,10 +58,10 @@ export const ShowZeroUsesRemainActions = module.settings.register('showZeroUsesR
   hasHint: true,
 });
 
-export const ShowForPCActors = module.settings.register('showForPCActors', Boolean, false, {
+export const ShowForPCActors = module.settings.register('showForPCActors', Boolean, true, {
   hasHint: true,
 });
-export const ShowForNPCActors = module.settings.register('showForNPCActors', Boolean, false, {
+export const ShowForNPCActors = module.settings.register('showForNPCActors', Boolean, true, {
   hasHint: true,
 });
 export const ShowForVehicleActors = module.settings.register('showForVehicleActors', Boolean, false, {
