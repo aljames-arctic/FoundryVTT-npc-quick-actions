@@ -32,6 +32,10 @@ export const ShowOnlyFavorites = module.settings.register('showOnlyFavorites', B
   hasHint: true,
 });
 
+export const ShowRequiredAmmo = module.settings.register('showRequiredAmmo', Boolean, false, {
+  hasHint: true,
+});
+
 export const ShowItemsInContainers = module.settings.register('showItemsInContainers', Boolean, false, {
   hasHint: true,
 });

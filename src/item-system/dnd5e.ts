@@ -1,4 +1,5 @@
 import module from '../module';
+import { ShowRequiredAmmo } from '../settings'
 
 type CalculatedUses = {
   available: number;
@@ -34,7 +35,7 @@ export const calculateUsesForItem = (item: dnd5e.documents.Item5e): CalculatedUs
     case 'spell':
       return calculateSpellUses(itemData as dnd5e.documents.ItemSystemData.Spell, item.actor);
     case 'weapon':
-      return calculateWeaponUses(itemData as dnd5e.documents.ItemSystemData.Weapon);
+      return calculateWeaponUses(item as dnd5e.documents.ItemSystemData.Weapon);
     default:
       return null;
   }
@@ -149,10 +150,20 @@ function calculateSpellUses(itemData: dnd5e.documents.ItemSystemData.Spell, acto
   return makeResult(pool.value ?? 0, pool.max ?? 0);
 }
 
-function calculateWeaponUses(itemData: dnd5e.documents.ItemSystemData.Weapon) {
+function calculateWeaponUses(item: Item) {
   // If the weapon is a thrown weapon, but not a returning weapon, show quantity
+  const itemData = item.system
   if (foundry.utils.getProperty(itemData.properties, 'thr') && !foundry.utils.getProperty(itemData.properties, 'ret')) {
     return { available: itemData.quantity ?? 0, maximum: null };
   }
+
+  const ammunition = itemData?.ammunition?.type;
+  if (ShowRequiredAmmo.get() && ammunition) {
+    const quantity = item.actor.items
+                                .filter(item => item.system.type?.subtype === ammunition)
+                                .reduce((sum, item) => sum + item.system.quantity, 0);
+    return quantity ? { available: quantity } : null;
+  }
+
   return null;
 }

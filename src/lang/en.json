@@ -11,6 +11,10 @@
         "label": "Show Favorites Only",
         "hint": "If checked, for characters that have at least one 'Favorite', only actions for items in their favorites will be displayed."
       },
+      "showRequiredAmmo": {
+        "label": "Show Ammunition Counts",
+        "hint": "If checked, for items that use ammunition, the current ammunition count will be shown next to the item name in the Quick Actions menu."
+      },
       "showItemsInContainers" : {
         "label": "Show Items in Containers",
         "hint": "If checked, items that are inside containers will be shown in the Quick Actions menu."

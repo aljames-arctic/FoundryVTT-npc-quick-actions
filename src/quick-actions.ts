@@ -336,8 +336,6 @@ const getActionNameWithUses = (item: Item): string | null => {
         }
         if (resourceConsumed) { break; }
     }
-
-    if (!uses) { return name; }
     
     // For spells, only show the usage count for At Will, Ritual, and Innate, 
     // as spell slot count is handled in the Spell Subcategory header.
@@ -347,7 +345,8 @@ const getActionNameWithUses = (item: Item): string | null => {
         if (!method || ['spell', 'pact'].includes(method)) { return name; }
     }
 
-    let usageCount = (uses.maximum) ? `${uses.available} / ${uses.maximum}` : `${uses.available}`;
+    if (!uses) return name;
+    let usageCount = (uses?.maximum) ? `${uses?.available} / ${uses?.maximum}` : `${uses?.available}`;
     return `${name} (${usageCount})`;
 };
 
