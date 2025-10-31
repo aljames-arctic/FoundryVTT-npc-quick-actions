@@ -129,6 +129,11 @@ const isLegendaryResistance = (activity: any): boolean => {
     return activity?.consumption?.targets?.some((target: any) => target?.target === 'resources.legres.value');
 };
 
+const isAutomationOnly = (activity: any): boolean => {
+    const isMidiAutomation = activity?.midiProperties?.automationOnly;
+    return isMidiAutomation ?? false;
+}
+
 const getActivationCategoryFromActivity = (activity: any): ActivationCategory | null => {
   // Oddball cases... for various reasons
   if (isLegendaryAction(activity)) { return ACTIVATION_CATEGORY.legendaryAction; }
@@ -288,6 +293,7 @@ const categorizeActivities = (item: Item): ActivationCategory[] => {
   const activities = item?.system?.activities?.entries() ?? [];
   const uniqueActivities = new Map<string, ActivationCategory>();
   for (const [_, activity] of activities) {
+    if (isAutomationOnly(activity)) { continue; }
     const currentCategory = getActivationCategoryFromActivity(activity);
     if (currentCategory) {
         if (currentCategory.name === ACTIVATION_CATEGORY.lair.name) {
