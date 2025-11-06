@@ -1,6 +1,17 @@
 import * as ItemSystem from './item-system';
 import module from './module';
 import { ShowOnlyFavorites, ShowItemsInContainers, showUnequippedItems, showUnpreparedSpells } from './settings';
+import { 
+    ACTIVATION_CATEGORY, 
+    DISPLAY_CATEGORY, 
+    SPELL_SUBCATEGORY, 
+    TYPE_CATEGORY, 
+    getSpellLevelLabel, 
+    type ActivationCategory, 
+    type DisplayCategory, 
+    type SpellSubcategory, 
+    type TypeCategory 
+} from './constants';
 
 // --- Utility Functions ---
 
@@ -8,88 +19,7 @@ function caseInsensitiveCompare(a: string, b: string) {
   return a.localeCompare(b, undefined, { sensitivity: 'base' });
 }
 
-function getOrdinalSuffix(n: number): string {
-    const s = ['th', 'st', 'nd', 'rd'];
-    const v = n % 100;
-    return s[(v - 20) % 10] || s[v] || s[0];
-}
-
-function getSpellLevelLabel(level: number): string {
-    if (level === 0) {
-        return module.localize('spell-abbr.cantrip');
-    }
-    const suffix = getOrdinalSuffix(level);
-    return `${level}${suffix} ${module.localize('spell-level-label')}`;
-}
-
 // --- Action and Category Types & Constants ---
-
-export type SpellSubcategory = {
-  name: string;
-  displayName: string;
-  sort: number;
-  level: number;
-  slots?: { available: number; maximum: number };
-};
-const SPELL_SUBCATEGORY = {
-    pact: { name: 'spell_pact', sort: 0 },
-    atwill: { name: 'spell_atwill', sort: 1 },
-    ritual: { name: 'spell_ritual', sort: 2 },
-    innate: { name: 'spell_innate', sort: 3 },
-    cantrip: { name: 'spell_cantrip', sort: 4 },
-    level1: { name: 'spell_level1', sort: 5 },
-    level2: { name: 'spell_level2', sort: 6 },
-    level3: { name: 'spell_level3', sort: 7 },
-    level4: { name: 'spell_level4', sort: 8 },
-    level5: { name: 'spell_level5', sort: 9 },
-    level6: { name: 'spell_level6', sort: 10 },
-    level7: { name: 'spell_level7', sort: 11 },
-    level8: { name: 'spell_level8', sort: 12 },
-    level9: { name: 'spell_level9', sort: 13 },
-}
-
-export type DisplayCategory = {
-  sort: number;
-  name: string;
-};
-export const DISPLAY_CATEGORY = {
-  item: { sort: 1, name: 'display_item' },
-  feature: { sort: 2, name: 'display_feature' },
-  spell: { sort: 3, name: 'display_spell' },
-  special: { sort: 4, name: 'display_special' },
-  other: { sort: 5, name: 'display_other' },
-};
-
-export type ActivationCategory = {
-  sort: number;
-  name: string;
-};
-export const ACTIVATION_CATEGORY: Record<string, ActivationCategory> = {
-    action: { name: 'activation_action', sort: 0 },
-    bonus: { name: 'activation_bonus', sort: 1 },
-    reaction: { name: 'activation_reaction', sort: 2 },
-    mixed: { name: 'activation_mixed', sort: 3 },
-    mythic: { name: 'activation_mythic', sort: 4 },
-    legendaryAction: { name: 'activation_legendaryAction', sort: 5 },
-    legendaryResist: { name: 'activation_legendaryResist', sort: 6 },
-    lair: { name: 'activation_lair', sort: 7 },
-    special: { name: 'activation_special', sort: 8 },
-    crew: { name: 'activation_crew', sort: 9 },
-    newTurn: { name: 'activation_new-turn', sort: 10 },
-};
-
-type TypeCategory = {
-  sort: number;
-  name: string;
-};
-const TYPE_CATEGORY = {
-  weapon: { sort: 1, name: "type_weapon" },
-  equipment: { sort: 2, name: "type_equipment"},
-  consumable: { sort: 3, name: "type_consumable"},
-  other: { sort: 4, name: "type_other"},
-  feature: { sort: 5, name: "type_feature" },
-  spell: { sort: 6, name: "type_spell" },
-};
 
 export type Category = {
   display: DisplayCategory;
@@ -120,8 +50,8 @@ const getActivationCategoryFromType = (activationType: string | undefined): Acti
     return ACTIVATION_CATEGORY[key as keyof typeof ACTIVATION_CATEGORY] ?? null;
 };
 
-const isLegendaryAction = (activity: any): boolean => {
-    return ["legendary"].includes(activity?.activation?.type); // Technically could have named the map "legendary" but I don't like that...
+const isSpecialAction = (activity: any): boolean => {
+    return ["legendary", "mythic", "lair"].includes(activity?.activation?.type);
 };
 
 const isLegendaryResistance = (activity: any): boolean => {
@@ -136,7 +66,12 @@ const isAutomationOnly = (activity: any): boolean => {
 
 const getActivationCategoryFromActivity = (activity: any): ActivationCategory | null => {
   // Oddball cases... for various reasons
-  if (isLegendaryAction(activity)) { return ACTIVATION_CATEGORY.legendaryAction; }
+  if (isSpecialAction(activity)) { 
+    const activationType = activity?.activation?.type;
+    if (activationType === 'mythic') return ACTIVATION_CATEGORY.mythic;
+    if (activationType === 'lair') return ACTIVATION_CATEGORY.lair;
+    return ACTIVATION_CATEGORY.legendaryAction; 
+  }
   if (isLegendaryResistance(activity)) { return ACTIVATION_CATEGORY.legendaryResist; }
 
   // If it consumes both ... you're just weird and I don't support your game choices.
@@ -319,13 +254,10 @@ const hasNoFavoritesOrIsInFavorites = (actor: Actor, item: Item): boolean => {
 
 // --- Action Construction Helpers ---
 
-const getActionNameWithUses = (item: Item): string | null => {
-    const uses = ItemSystem.calculateUsesForItem(item);
-    let name = item.name;
-
+const getSpecialActionName = (item: Item, name: string): string => {
     const activities = item?.system?.activities?.entries() ?? [];
     for (const [_, activity] of activities) {
-        let resourceConsumed = null;
+        let activityCost = null;
         // Only handle Legendary Actions and Legendary Resistances
         // Legendary Actions (legendary type)
         // Legendary Resistances (special type)
@@ -334,25 +266,37 @@ const getActionNameWithUses = (item: Item): string | null => {
             switch (target?.target) {
                 case 'resources.legres.value':
                 case 'resources.legact.value':
-                    resourceConsumed = target?.value;
-                    if (!resourceConsumed) module.logger.warn(`Resource consumed is undefined for activity ${activity.name} in item ${item.name} (${item.id}})`);
-                    name = `[${resourceConsumed ?? "?"}] ${name}`
-                    break;
+                    activityCost = target?.value;
+                    if (!activityCost) module.logger.warn(`Activity cost is undefined for activity ${activity.name} in item ${item.name} (${item.id}})`);
+                    return `[${activityCost ?? "?"}] ${name}`;
             }
         }
-        if (resourceConsumed) { break; }
     }
-    
-    // For spells, only show the usage count for At Will, Ritual, and Innate, 
+    return name;
+};
+
+const getActionNameWithUses = (item: Item): string | null => {
+    const uses = ItemSystem.calculateUsesForItem(item);
+    let name = item.name;
+
+    name = getSpecialActionName(item, name);    // Prefix some actions with a cost
+
+    // For spells, only show the usage count for At Will, Ritual, and Innate,
     // as spell slot count is handled in the Spell Subcategory header.
-    if (item.type === "spell") {
+    if (item.type === 'spell') {
         const method = item.system.method;
         // If the method is 'spell' (uses slots) or 'pact' (uses pact slots), don't show uses here.
-        if (!method || ['spell', 'pact'].includes(method)) { return name; }
+        if (method && !['spell', 'pact'].includes(method)) {
+            if (uses) {
+                const usageCount = uses.maximum ? `${uses.available} / ${uses.maximum}` : `${uses.available}`;
+                return `${name} (${usageCount})`;
+            }
+        }
+        return name;
     }
 
     if (!uses) return name;
-    let usageCount = (uses?.maximum) ? `${uses?.available} / ${uses?.maximum}` : `${uses?.available}`;
+    const usageCount = (uses.maximum) ? `${uses.available} / ${uses.maximum}` : `${uses.available}`;
     return `${name} (${usageCount})`;
 };
 
@@ -399,16 +343,7 @@ const getActionForItem = (actor: Actor, item: Item): Action | null => {
 
 // --- Main Exported Function ---
 
-export const getTokenActions = (actor: Actor) => {
-  if (!actor) { return null;}
-  const actions: Action[] = [];
-  
-  for (const item of actor.items) {
-    if (item.system.properties?.has('trait')) continue;
-    const action = getActionForItem(actor, item);
-    if (action) { actions.push(action); }
-  }
-  
+const sortActions = (actions: Action[]) => {
   actions.sort((a, b) => {
     const displayCategoryDelta = a.category.display.sort - b.category.display.sort;
     if (displayCategoryDelta !== 0) { return displayCategoryDelta; }
@@ -427,6 +362,18 @@ export const getTokenActions = (actor: Actor) => {
 
     return caseInsensitiveCompare(a.name, b.name);
   });
+};
 
+export const getTokenActions = (actor: Actor) => {
+  if (!actor) { return null;}
+  const actions: Action[] = [];
+  
+  for (const item of actor.items) {
+    if (item.system.properties?.has('trait')) continue;
+    const action = getActionForItem(actor, item);
+    if (action) { actions.push(action); }
+  }
+  
+  sortActions(actions);
   return actions;
 };

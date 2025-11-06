@@ -1,6 +1,13 @@
 // ui.ts
+import { 
+    ACTIVATION_CATEGORY, 
+    DISPLAY_CATEGORY,
+    type ActivationCategory, 
+    type DisplayCategory, 
+    type SpellSubcategory 
+} from './constants';
 import module from './module';
-import { type Action, type ActivationCategory, getTokenActions, type SpellSubcategory, type DisplayCategory, DISPLAY_CATEGORY, ACTIVATION_CATEGORY, type Category } from './quick-actions';
+import { getTokenActions, type Action, type Category } from './quick-actions';
 import { MinimumRole, ShowForNPCActors, ShowForPCActors, ShowForVehicleActors, ShowZeroUsesRemainActions } from './settings';
 
 const CSS_ACTIVE = module.cssPrefix.child('active');
@@ -152,6 +159,80 @@ const isShownForActorType = (actor: dnd5e.documents.Actor5e) => {
   return true;
 };
 
+const filterActions = (actions: Action[], actor: dnd5e.documents.Actor5e): Action[] => {
+    const zeroSlotSpellSubcategories = new Set<string>();
+    if (!ShowZeroUsesRemainActions.get()) {
+      const upcastSlots = calculateUpcastSlots(actor);
+      for (const action of actions) {
+        const spellCategory = action.category.spell;
+        if (spellCategory?.slots && spellCategory.level > 0) {
+          if ((upcastSlots.get(spellCategory.level) ?? 0) === 0) {
+            zeroSlotSpellSubcategories.add(spellCategory.name);
+          }
+        }
+      }
+    }
+
+    return actions.filter(action => 
+        !action.category.spell || !zeroSlotSpellSubcategories.has(action.category.spell.name)
+    );
+}
+
+const buildActionsList = (actions: Action[], actor: dnd5e.documents.Actor5e) => {
+    let lastDisplayCategory: DisplayCategory | null = null;
+    let displayCategoryEntries: HTMLElement | null = null;
+
+    let lastActivationCategory: ActivationCategory | null = null;
+    let activationCategoryEntries: HTMLElement | null = null;
+
+    let lastSpellSubcategory: SpellSubcategory | null = null;
+    let spellSubcategoryEntries: HTMLElement | null = null;
+
+    for (const action of actions) {
+        if (action.category.display.name !== lastDisplayCategory?.name) {
+            lastDisplayCategory = action.category.display;
+            const displayCategoryName = getDisplayCategoryName(action.category.display);
+            
+            // Display Category is the outermost level
+            const key = action.category.display.name; 
+            displayCategoryEntries = createCollapsibleContainer(displayCategoryName, key, actor, actionsContainer, 'div', CSS_DISPLAY_CATEGORY_WRAPPER, CSS_DISPLAY_CATEGORY_HEADER, CSS_DISPLAY_CATEGORY_ENTRIES);
+            
+            lastActivationCategory = null;
+            lastSpellSubcategory = null;
+        }
+
+        if (action.category.display.name === DISPLAY_CATEGORY.spell.name && action.category.spell) {
+            // Activation Category (e.g., Action, Bonus Action)
+            if (action.category.action.name !== lastActivationCategory?.name) {
+                lastActivationCategory = action.category.action;
+                const activationCategoryName = getActivationCategoryName(action.category.action);
+                const key = `${lastDisplayCategory!.name}.${lastActivationCategory.name}`;
+                activationCategoryEntries = createCollapsibleContainer(activationCategoryName, key, actor, displayCategoryEntries!, 'div', CSS_ACTIVATION_CATEGORY_WRAPPER, CSS_ACTIVATION_CATEGORY_HEADER, CSS_ACTIVATION_CATEGORY_ENTRIES);
+                lastSpellSubcategory = null;
+            }
+
+            // Spell Subcategory (e.g., Cantrips, 1st Level, Innate) inside an Activation Category
+            if (action.category.spell.name !== lastSpellSubcategory?.name) {
+                lastSpellSubcategory = action.category.spell;
+                const spellSubcategoryName = getActivationCategoryNameWithUses(action.category.spell, actor);
+                const key = `category.${lastDisplayCategory!.name}.${lastActivationCategory!.name}.${lastSpellSubcategory.name}`;
+                spellSubcategoryEntries = createCollapsibleContainer(spellSubcategoryName, key, actor, activationCategoryEntries!, 'div', CSS_SPELL_SUB_CATEGORY_WRAPPER, CSS_SPELL_SUB_CATEGORY_HEADER, CSS_SPELL_SUB_CATEGORY_ENTRIES);
+            }
+            spellSubcategoryEntries!.appendChild(getActionRow(action));
+        } else {
+            // Activation Category (e.g., Action, Bonus Action) for non-spells (Items, Features, etc.)
+            if (action.category.action.name !== lastActivationCategory?.name) {
+                lastActivationCategory = action.category.action;
+                const activationCategoryName = getActivationCategoryNameWithUses(action.category.action, actor);
+                // Nested key using a dot (which is the source of the issue)
+                const key = `category.${lastDisplayCategory!.name}.${lastActivationCategory.name}`;
+                activationCategoryEntries = createCollapsibleContainer(activationCategoryName, key, actor, displayCategoryEntries!, 'div', CSS_ACTIVATION_CATEGORY_WRAPPER, CSS_ACTIVATION_CATEGORY_HEADER, CSS_ACTIVATION_CATEGORY_ENTRIES);
+            }
+            activationCategoryEntries!.appendChild(getActionRow(action));
+        }
+    }
+}
+
 export const showTokenActions = (token?: Token | null) => {
   hideTokenActions();
   module.logger.debug('showTokenActions()', token);
@@ -180,22 +261,7 @@ export const showTokenActions = (token?: Token | null) => {
     noActions.appendChild(document.createTextNode(module.localize('no-actions')));
     actionsContainer.appendChild(noActions);
   } else {
-    const zeroSlotSpellSubcategories = new Set<string>();
-    if (!ShowZeroUsesRemainActions.get()) {
-      const upcastSlots = calculateUpcastSlots(actor);
-      for (const action of actions) {
-        const spellCategory = action.category.spell;
-        if (spellCategory?.slots && spellCategory.level > 0) {
-          if ((upcastSlots.get(spellCategory.level) ?? 0) === 0) {
-            zeroSlotSpellSubcategories.add(spellCategory.name);
-          }
-        }
-      }
-    }
-
-    const filteredActions = actions.filter(action => 
-        !action.category.spell || !zeroSlotSpellSubcategories.has(action.category.spell.name)
-    );
+    const filteredActions = filterActions(actions, actor);
 
     if (filteredActions.length === 0) {
         const noActions = document.createElement('div');
@@ -206,58 +272,7 @@ export const showTokenActions = (token?: Token | null) => {
     }
 
     module.logger.debug('showTokenActions() -> true:', filteredActions);
-    let lastDisplayCategory: DisplayCategory | null = null;
-    let displayCategoryEntries: HTMLElement | null = null;
-
-    let lastActivationCategory: ActivationCategory | null = null;
-    let activationCategoryEntries: HTMLElement | null = null;
-
-    let lastSpellSubcategory: SpellSubcategory | null = null;
-    let spellSubcategoryEntries: HTMLElement | null = null;
-
-    for (const action of filteredActions) {
-        if (action.category.display.name !== lastDisplayCategory?.name) {
-            lastDisplayCategory = action.category.display;
-            const displayCategoryName = getDisplayCategoryName(action.category.display);
-            
-            // Display Category is the outermost level
-            const key = action.category.display.name; 
-            displayCategoryEntries = createCollapsibleContainer(displayCategoryName, key, actor, actionsContainer, 'div', CSS_DISPLAY_CATEGORY_WRAPPER, CSS_DISPLAY_CATEGORY_HEADER, CSS_DISPLAY_CATEGORY_ENTRIES);
-            
-            lastActivationCategory = null;
-            lastSpellSubcategory = null;
-        }
-
-        if (action.category.display.name === DISPLAY_CATEGORY.spell.name && action.category.spell) {
-            // Activation Category (e.g., Action, Bonus Action)
-            if (action.category.action.name !== lastActivationCategory?.name) {
-                lastActivationCategory = action.category.action;
-                const activationCategoryName = getActivationCategoryName(action.category.action);
-                const key = `${lastDisplayCategory!.name}.${lastActivationCategory.name}`;
-                activationCategoryEntries = createCollapsibleContainer(activationCategoryName, key, actor, displayCategoryEntries!, 'div', CSS_ACTIVATION_CATEGORY_WRAPPER, CSS_ACTIVATION_CATEGORY_HEADER, CSS_ACTIVATION_CATEGORY_ENTRIES);
-                lastSpellSubcategory = null;
-            }
-
-            // Spell Subcategory (e.g., Cantrips, 1st Level, Innate) inside an Activation Category
-            if (action.category.spell.name !== lastSpellSubcategory?.name) {
-                lastSpellSubcategory = action.category.spell;
-                const spellSubcategoryName = getActivationCategoryNameWithUses(action.category.spell, actor);
-                const key = `${lastDisplayCategory!.name}.${lastActivationCategory!.name}.${lastSpellSubcategory.name}`;
-                spellSubcategoryEntries = createCollapsibleContainer(spellSubcategoryName, key, actor, activationCategoryEntries!, 'div', CSS_SPELL_SUB_CATEGORY_WRAPPER, CSS_SPELL_SUB_CATEGORY_HEADER, CSS_SPELL_SUB_CATEGORY_ENTRIES);
-            }
-            spellSubcategoryEntries!.appendChild(getActionRow(action));
-        } else {
-            // Activation Category (e.g., Action, Bonus Action) for non-spells (Items, Features, etc.)
-            if (action.category.action.name !== lastActivationCategory?.name) {
-                lastActivationCategory = action.category.action;
-                const activationCategoryName = getActivationCategoryNameWithUses(action.category.action, actor);
-                // Nested key using a dot (which is the source of the issue)
-                const key = `${lastDisplayCategory!.name}.${lastActivationCategory.name}`;
-                activationCategoryEntries = createCollapsibleContainer(activationCategoryName, key, actor, displayCategoryEntries!, 'div', CSS_ACTIVATION_CATEGORY_WRAPPER, CSS_ACTIVATION_CATEGORY_HEADER, CSS_ACTIVATION_CATEGORY_ENTRIES);
-            }
-            activationCategoryEntries!.appendChild(getActionRow(action));
-        }
-    }
+    buildActionsList(filteredActions, actor);
   }
   repositionActionsOuterContainer(token as Token);
 
