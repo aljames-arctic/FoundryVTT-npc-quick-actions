@@ -26,20 +26,21 @@ export type SpellSubcategory = {
   slots?: { available: number; maximum: number };
 };
 export const SPELL_SUBCATEGORY = {
-    pact: { name: 'spell_pact', sort: 0 },
-    atwill: { name: 'spell_atwill', sort: 1 },
-    ritual: { name: 'spell_ritual', sort: 2 },
-    innate: { name: 'spell_innate', sort: 3 },
-    cantrip: { name: 'spell_cantrip', sort: 4 },
-    level1: { name: 'spell_level1', sort: 5 },
-    level2: { name: 'spell_level2', sort: 6 },
-    level3: { name: 'spell_level3', sort: 7 },
-    level4: { name: 'spell_level4', sort: 8 },
-    level5: { name: 'spell_level5', sort: 9 },
-    level6: { name: 'spell_level6', sort: 10 },
-    level7: { name: 'spell_level7', sort: 11 },
-    level8: { name: 'spell_level8', sort: 12 },
-    level9: { name: 'spell_level9', sort: 13 },
+    additional: { name: 'spell_additional', sort: 0 },
+    pact: { name: 'spell_pact', sort: 1 },
+    atwill: { name: 'spell_atwill', sort: 2 },
+    ritual: { name: 'spell_ritual', sort: 3 },
+    innate: { name: 'spell_innate', sort: 4 },
+    cantrip: { name: 'spell_cantrip', sort: 5 },
+    level1: { name: 'spell_level1', sort: 6 },
+    level2: { name: 'spell_level2', sort: 7 },
+    level3: { name: 'spell_level3', sort: 8 },
+    level4: { name: 'spell_level4', sort: 9 },
+    level5: { name: 'spell_level5', sort: 10 },
+    level6: { name: 'spell_level6', sort: 11 },
+    level7: { name: 'spell_level7', sort: 12 },
+    level8: { name: 'spell_level8', sort: 13 },
+    level9: { name: 'spell_level9', sort: 14 },
 }
 
 export type DisplayCategory = {

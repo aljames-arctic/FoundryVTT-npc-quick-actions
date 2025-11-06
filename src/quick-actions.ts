@@ -133,7 +133,7 @@ const getSpellLevelCategory = (item: Item): ItemCategoryData => {
     const spellSubcategory: SpellSubcategory = {
         name: SPELL_SUBCATEGORY[spellLevelKey as keyof typeof SPELL_SUBCATEGORY]?.name ?? `spell_level${level}`,
         displayName: getSpellLevelLabel(level),
-        sort: 4 + level,
+        sort: SPELL_SUBCATEGORY.cantrip.sort + level,
         level,
         slots,
     };
@@ -191,7 +191,25 @@ const getSpellMethodCategory = (item: Item): ItemCategoryData => {
     };
 };
 
+const getAdditionalSpellCategory = (item: Item): ItemCategoryData => {
+    const subcategory: SpellSubcategory = {
+        name: SPELL_SUBCATEGORY.additional.name,
+        displayName: module.localize('spell-abbr.additional'),
+        sort: SPELL_SUBCATEGORY.additional.sort,
+        level: -30, // Sorts before all other spells
+    };
+
+    return {
+        typeCategory: TYPE_CATEGORY.spell,
+        spellSubcategory: subcategory,
+    };
+};
+
 const getSpellTypeCategory = (item: Item): ItemCategoryData | null => {
+    if (foundry.utils.getProperty(item, 'flags.dnd5e.cachedFor')) {
+        return getAdditionalSpellCategory(item);
+    }
+
     const method = item.system.method ?? '';
     if (method === 'spell') {
         if (shouldFilterUnpreparedSpell(item)) { return null; }
@@ -284,9 +302,10 @@ const getActionNameWithUses = (item: Item): string | null => {
     // For spells, only show the usage count for At Will, Ritual, and Innate,
     // as spell slot count is handled in the Spell Subcategory header.
     if (item.type === 'spell') {
+        const isAdditional = foundry.utils.getProperty(item, 'flags.dnd5e.cachedFor');
         const method = item.system.method;
         // If the method is 'spell' (uses slots) or 'pact' (uses pact slots), don't show uses here.
-        if (method && !['spell', 'pact'].includes(method)) {
+        if (isAdditional || (method && !['spell', 'pact'].includes(method))) {
             if (uses) {
                 const usageCount = uses.maximum ? `${uses.available} / ${uses.maximum}` : `${uses.available}`;
                 return `${name} (${usageCount})`;

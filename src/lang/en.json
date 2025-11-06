@@ -53,6 +53,7 @@
     "display_spell": "Spells",
     "display_special": "Unique Actions",
     "display_other": "Other",
+    "spell_additional": "Additional Spells",
     "reset-for-new-turn": "Reset Actions for New Turn",
     "legendary-actions-reset": "*Legendary Actions have been reset*",
 
@@ -68,6 +69,7 @@
       "pact": "Pact Magic",
       "cantrip": "Cantrips",
       "innate": "Innate",
+      "additional": "Additional",
       "atwill-ritual": "At Will / Ritual",
       "unknown": "?"
     },
