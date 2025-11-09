@@ -12,6 +12,11 @@ export class QuickActivity {
     }
 
     private getIsHidden(activity: any): boolean {
+        // Only show potentially combat usable actions.
+        const allowedTypes = ['action', 'bonus', 'reaction', 'legendary', 'mythic', 'lair', 'crew', 'special'];
+        const activationType = activity?.activation?.type;
+        if (!activationType || !allowedTypes.includes(activationType)) return true;
+
         const isMidiAutomation = activity?.midiProperties?.automationOnly;
         return isMidiAutomation ?? false;
     }
