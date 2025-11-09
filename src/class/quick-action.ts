@@ -6,6 +6,7 @@ export class QuickAction {
   public category: Category;
   public item: Item;
   public actor: Actor;
+  public isHidden: boolean;
 
   constructor(item: Item) {
     this.item = item;
@@ -15,6 +16,12 @@ export class QuickAction {
       display: DISPLAY_CATEGORY.unidentified,
       action: ACTIVATION_CATEGORY.unidentified,
     };
+    this.isHidden = this.getIsHidden();
+  }
+
+  private getIsHidden(): boolean {
+    // More complex logic can be added here later.
+    return false;
   }
 
   roll() {

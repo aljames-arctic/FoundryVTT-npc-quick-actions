@@ -56,7 +56,10 @@ export const getTokenActions = (actor: Actor) : Action[] => {
   const actions: Action[] = [];
   if (actor) {
     for (const item of actor.items) {
-        actions.push(new QuickAction(item));
+        const action = new QuickAction(item);
+        if (!action.isHidden) {
+          actions.push(action);
+        }
     }
     sortActions(actions);
   }
