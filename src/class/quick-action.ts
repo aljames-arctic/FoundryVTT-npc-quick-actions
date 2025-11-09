@@ -1,4 +1,4 @@
-import { ACTIVATION_CATEGORY, DISPLAY_CATEGORY } from '../constants';
+import { ACTIVATION_CATEGORY, DISPLAY_CATEGORY, SPELL_SUBCATEGORY } from '../constants';
 import { Category } from '../quick-actions';
 import { ShowOnlyFavorites } from '../settings';
 
@@ -56,10 +56,19 @@ export class QuickAction {
     const action = this.getActionCategory();
     const display = this.getDisplayCategory();
 
-    return {
+    const category: Category = {
       display,
       action,
     };
+
+    if (display === DISPLAY_CATEGORY.spell) {
+      const spellSubcategory = this.getSpellSubcategory();
+      if (spellSubcategory) {
+        category.spell = spellSubcategory;
+      }
+    }
+
+    return category;
   }
 
   private getActionCategory(): ActivationCategory {
@@ -104,6 +113,24 @@ export class QuickAction {
       default:
         return DISPLAY_CATEGORY.undefined;
     }
+  }
+
+  private getSpellSubcategory(): SpellSubcategory | undefined {
+    const spellSystem = this.item.system as dnd5e.documents.ItemSystemData.Spell;
+    const preparationMode = spellSystem.preparation?.mode;
+    const spellLevel = spellSystem.level;
+
+    if (preparationMode === 'pact') return SPELL_SUBCATEGORY.pact;
+    if (preparationMode === 'atwill') return SPELL_SUBCATEGORY.atwill;
+    if (preparationMode === 'innate') return SPELL_SUBCATEGORY.innate;
+    if (spellSystem.properties?.has('ritual')) return SPELL_SUBCATEGORY.ritual;
+
+    if (spellLevel === 0) return SPELL_SUBCATEGORY.cantrip;
+    if (spellLevel >= 1 && spellLevel <= 9) {
+      return SPELL_SUBCATEGORY[`level${spellLevel}` as keyof typeof SPELL_SUBCATEGORY];
+    }
+
+    return undefined;
   }
 
   private buildActivities(item: Item): QuickActivity[] {
