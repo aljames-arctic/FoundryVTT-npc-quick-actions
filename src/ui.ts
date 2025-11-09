@@ -90,28 +90,21 @@ function createCollapsibleContainer(
     return entriesContainer;
 }
 
-const getDisplayCategoryName = (displayCategory: DisplayCategory) => {
-  return module.localize(displayCategory.name);
-};
-
-const getActivationCategoryName = (activationCategory: ActivationCategory) => {
-  return module.localize(activationCategory.name);
-};
-
 const getActivationCategoryNameWithUses = (
     category: SpellSubcategory | ActivationCategory,
     actor: dnd5e.documents.Actor5e
 ) => {
     if ('level' in category) { // It's a SpellSubcategory
         const spellSubcategory = category as SpellSubcategory;
-        let displayName = spellSubcategory.displayName;
+        let displayName = module.localize(spellSubcategory.name);
         if (spellSubcategory.slots) {
             displayName = `${displayName} (${spellSubcategory.slots.available} / ${spellSubcategory.slots.maximum})`;
         }
+        console.error('Localizing', category, 'as', displayName);
         return displayName;
     } else { // It's an ActivationCategory
         const activationCategory = category as ActivationCategory;
-        let displayName = getActivationCategoryName(activationCategory);
+        let displayName = module.localize(activationCategory.name);
         switch (activationCategory.name) {
             case ACTIVATION_CATEGORY.legendaryAction.name:
                 const legact = actor.system.resources.legact;
@@ -122,6 +115,7 @@ const getActivationCategoryNameWithUses = (
                 if (legres && legres.max > 0) displayName = `${displayName} (${legres.value} / ${legres.max})`;
                 break;
         }
+        console.error('Localizing', category, 'as', displayName);
         return displayName;
     }
 };
@@ -153,7 +147,7 @@ const buildActionsList = (actions: Action[], actor: dnd5e.documents.Actor5e) => 
     for (const action of actions) {
         if (action.category.display.name !== lastDisplayCategory?.name) {
             lastDisplayCategory = action.category.display;
-            const displayCategoryName = getDisplayCategoryName(action.category.display);
+            const displayCategoryName = module.localize(action.category.display.name);
             
             // Display Category is the outermost level
             const key = action.category.display.name; 
@@ -167,7 +161,7 @@ const buildActionsList = (actions: Action[], actor: dnd5e.documents.Actor5e) => 
             // Activation Category (e.g., Action, Bonus Action)
             if (action.category.action.name !== lastActivationCategory?.name) {
                 lastActivationCategory = action.category.action;
-                const activationCategoryName = getActivationCategoryName(action.category.action);
+                const activationCategoryName = module.localize(action.category.action.name);
                 const key = `${lastDisplayCategory!.name}.${lastActivationCategory.name}`;
                 activationCategoryEntries = createCollapsibleContainer(activationCategoryName, key, actor, displayCategoryEntries!, 'div', CSS_ACTIVATION_CATEGORY_WRAPPER, CSS_ACTIVATION_CATEGORY_HEADER, CSS_ACTIVATION_CATEGORY_ENTRIES);
                 lastSpellSubcategory = null;
