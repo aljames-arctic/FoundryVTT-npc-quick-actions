@@ -1,4 +1,4 @@
-import { ACTIVATION_CATEGORY, DISPLAY_CATEGORY, SPELL_SUBCATEGORY } from '../constants';
+import { ACTIVATION_CATEGORY, DISPLAY_CATEGORY, SPELL_SUBCATEGORY, SpellSubcategory } from '../constants';
 import { Category } from '../quick-actions';
 import { ShowOnlyFavorites } from '../settings';
 
@@ -63,9 +63,7 @@ export class QuickItem {
 
     if (display === DISPLAY_CATEGORY.spell) {
       const spellSubcategory = this.getSpellSubcategory();
-      if (spellSubcategory) {
-        category.spell = spellSubcategory;
-      }
+      if (spellSubcategory) category.spell = spellSubcategory;
     }
 
     return category;
@@ -105,7 +103,6 @@ export class QuickItem {
     if (preparationMode === 'pact') return SPELL_SUBCATEGORY.pact;
     if (preparationMode === 'atwill') return SPELL_SUBCATEGORY.atwill;
     if (preparationMode === 'innate') return SPELL_SUBCATEGORY.innate;
-    if (spellSystem.properties?.has('ritual')) return SPELL_SUBCATEGORY.ritual;
 
     if (spellLevel === 0) return SPELL_SUBCATEGORY.cantrip;
     if (spellLevel >= 1 && spellLevel <= 9) {
