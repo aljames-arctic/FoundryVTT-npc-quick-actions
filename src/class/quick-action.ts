@@ -1,5 +1,6 @@
 import { ACTIVATION_CATEGORY, DISPLAY_CATEGORY } from '../constants';
 import { Category } from '../quick-actions';
+import { ShowOnlyFavorites } from '../settings';
 
 export class QuickActivity {
     public name: string;
@@ -46,10 +47,19 @@ export class QuickAction {
     return activities;
   }
 
+  private isFavorite(): boolean {
+    const actor = this.actor;
+    if (!('favorites' in actor.system)) return true;
+    const favorites = actor.system.favorites;
+    if (!favorites?.length) return true;
+    return favorites.some(favorite => favorite.type === 'item' && favorite.id.endsWith(`.${this.item.id}`));
+  }
+
   private getIsHidden(): boolean {
-    if (this.activities.length === 0) {
-      return true;
-    }
+    if (this.item.system.container) return true;
+    if (ShowOnlyFavorites.get() && !this.isFavorite()) return true;
+    if (this.item.system.properties?.has('trait')) return true;
+    if (this.activities.length === 0) return true;
     return this.activities.every(activity => activity.isHidden);
   }
 
