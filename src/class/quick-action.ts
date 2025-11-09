@@ -24,7 +24,7 @@ export class QuickActivity {
     }
 }
 
-export class QuickAction {
+export class QuickItem {
   public name: string;
   public category: Category;
   public item: Item;

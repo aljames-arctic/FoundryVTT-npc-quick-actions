@@ -4,7 +4,7 @@ import {
     type DisplayCategory, 
     type SpellSubcategory, 
 } from './constants';
-import { QuickAction } from './class/quick-action';
+import { QuickItem } from './class/quick-action';
 
 // --- Utility Functions ---
 
@@ -41,7 +41,7 @@ const sortActions = (actions: Action[]) => {
     if (a.category.display.name === DISPLAY_CATEGORY.spell.name) {
       // Spells: Display -> Activation -> Spell Sub
       if (activationCategoryDelta !== 0) { return activationCategoryDelta; }
-      const subcategoryDelta = (a.category.spell?.level ?? 0) - (b.category.spell?.level ?? 0);
+      const subcategoryDelta = (a.category.spell?.sort ?? 0) - (b.category.spell?.sort ?? 0);
       if (subcategoryDelta !== 0) { return subcategoryDelta; }
     } else {
       // Non-spells: Display -> Activation
@@ -56,7 +56,7 @@ export const getTokenActions = (actor: Actor) : Action[] => {
   const actions: Action[] = [];
   if (actor) {
     for (const item of actor.items) {
-        const action = new QuickAction(item);
+        const action = new QuickItem(item);
         if (!action.isHidden) {
           actions.push(action);
         }

@@ -100,7 +100,6 @@ const getActivationCategoryNameWithUses = (
         if (spellSubcategory.slots) {
             displayName = `${displayName} (${spellSubcategory.slots.available} / ${spellSubcategory.slots.maximum})`;
         }
-        console.error('Localizing', category, 'as', displayName);
         return displayName;
     } else { // It's an ActivationCategory
         const activationCategory = category as ActivationCategory;
@@ -115,7 +114,6 @@ const getActivationCategoryNameWithUses = (
                 if (legres && legres.max > 0) displayName = `${displayName} (${legres.value} / ${legres.max})`;
                 break;
         }
-        console.error('Localizing', category, 'as', displayName);
         return displayName;
     }
 };
