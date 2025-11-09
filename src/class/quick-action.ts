@@ -5,10 +5,12 @@ import { ShowOnlyFavorites } from '../settings';
 export class QuickActivity {
     public name: string;
     public isHidden: boolean;
+    public activationType: string;
 
     constructor(activity: any) {
         this.name = activity.name;
         this.isHidden = this.getIsHidden(activity);
+        this.activationType = activity.activation.type;
     }
 
     private getIsHidden(activity: any): boolean {
@@ -29,6 +31,7 @@ export class QuickAction {
   public actor: Actor;
   public isHidden: boolean;
   public activities: QuickActivity[];
+  public activationType: string;
 
   constructor(item: Item) {
     this.item = item;
@@ -40,6 +43,16 @@ export class QuickAction {
     };
     this.activities = this.buildActivities(item);
     this.isHidden = this.getIsHidden();
+    this.activationType = this.getActivationType();
+  }
+
+  private getActivationType(): string {
+    const visibleActivities = this.activities.filter(a => !a.isHidden);
+    if (visibleActivities.length === 0) return 'none';
+
+    const firstType = visibleActivities[0].activationType;
+    if (visibleActivities.every(a => a.activationType === firstType)) return firstType;
+    return 'mixedActivation';
   }
 
   private buildActivities(item: Item): QuickActivity[] {
