@@ -3,9 +3,16 @@ import { Category } from '../quick-actions';
 
 export class QuickActivity {
     public name: string;
+    public isHidden: boolean;
 
     constructor(activity: any) {
         this.name = activity.name;
+        this.isHidden = this.getIsHidden(activity);
+    }
+
+    private getIsHidden(activity: any): boolean {
+        const isMidiAutomation = activity?.midiProperties?.automationOnly;
+        return isMidiAutomation ?? false;
     }
 }
 
@@ -40,8 +47,10 @@ export class QuickAction {
   }
 
   private getIsHidden(): boolean {
-    // More complex logic can be added here later.
-    return false;
+    if (this.activities.length === 0) {
+      return true;
+    }
+    return this.activities.every(activity => activity.isHidden);
   }
 
   roll() {
