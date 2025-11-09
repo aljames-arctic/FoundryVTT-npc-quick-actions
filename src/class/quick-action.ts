@@ -72,28 +72,10 @@ export class QuickAction {
   }
 
   private getActionCategory(): ActivationCategory {
-    switch (this.activationType) {
-      case 'action':
-        return ACTIVATION_CATEGORY.action;
-      case 'bonus':
-        return ACTIVATION_CATEGORY.bonus;
-      case 'reaction':
-        return ACTIVATION_CATEGORY.reaction;
-      case 'legendary':
-        return ACTIVATION_CATEGORY.legendaryAction;
-      case 'mythic':
-        return ACTIVATION_CATEGORY.mythic;
-      case 'lair':
-        return ACTIVATION_CATEGORY.lair;
-      case 'crew':
-        return ACTIVATION_CATEGORY.crew;
-      case 'special':
-        return ACTIVATION_CATEGORY.special;
-      case 'mixedActivation':
-        return ACTIVATION_CATEGORY.mixed;
-      default:
-        return ACTIVATION_CATEGORY.undefined;
-    }
+    const standardActions = ['action', 'bonus', 'reaction', 'legendary', 'mythic', 'lair', 'crew', 'special'];
+    if (standardActions.includes(this.activationType)) return ACTIVATION_CATEGORY[this.activationType];
+    if (this.activationType == 'mixedActivation') return ACTIVATION_CATEGORY.mixed;
+    return ACTIVATION_CATEGORY.undefined;
   }
 
   private getDisplayCategory(): DisplayCategory {
