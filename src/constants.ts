@@ -48,12 +48,11 @@ export type DisplayCategory = {
   name: string;
 };
 export const DISPLAY_CATEGORY = {
-  unidentified: { sort: 0, name: 'display_unidentified' },
   item: { sort: 1, name: 'display_item' },
   feature: { sort: 2, name: 'display_feature' },
   spell: { sort: 3, name: 'display_spell' },
   special: { sort: 4, name: 'display_special' },
-  other: { sort: 5, name: 'display_other' },
+  undefined: { sort: 5, name: 'display_undefined' },
 };
 
 export type ActivationCategory = {
@@ -61,7 +60,6 @@ export type ActivationCategory = {
   name: string;
 };
 export const ACTIVATION_CATEGORY: Record<string, ActivationCategory> = {
-    unidentified: { name: 'activation_unidentified', sort: -1 },
     action: { name: 'activation_action', sort: 0 },
     bonus: { name: 'activation_bonus', sort: 1 },
     reaction: { name: 'activation_reaction', sort: 2 },
@@ -73,6 +71,7 @@ export const ACTIVATION_CATEGORY: Record<string, ActivationCategory> = {
     special: { name: 'activation_special', sort: 8 },
     crew: { name: 'activation_crew', sort: 9 },
     newTurn: { name: 'activation_new-turn', sort: 10 },
+    undefined: { name: 'activation_undefined', sort: 99 },
 };
 
 export type TypeCategory = {

@@ -37,13 +37,10 @@ export class QuickAction {
     this.item = item;
     this.actor = item.actor;
     this.name = item.name;
-    this.category = {
-      display: DISPLAY_CATEGORY.unidentified,
-      action: ACTIVATION_CATEGORY.unidentified,
-    };
     this.activities = this.buildActivities(item);
     this.isHidden = this.getIsHidden();
     this.activationType = this.getActivationType();
+    this.category = this.getCategory();
   }
 
   private getActivationType(): string {
@@ -53,6 +50,60 @@ export class QuickAction {
     const firstType = visibleActivities[0].activationType;
     if (visibleActivities.every(a => a.activationType === firstType)) return firstType;
     return 'mixedActivation';
+  }
+
+  private getCategory(): Category {
+    const action = this.getActionCategory();
+    const display = this.getDisplayCategory();
+
+    return {
+      display,
+      action,
+    };
+  }
+
+  private getActionCategory(): ActivationCategory {
+    switch (this.activationType) {
+      case 'action':
+        return ACTIVATION_CATEGORY.action;
+      case 'bonus':
+        return ACTIVATION_CATEGORY.bonus;
+      case 'reaction':
+        return ACTIVATION_CATEGORY.reaction;
+      case 'legendary':
+        return ACTIVATION_CATEGORY.legendaryAction;
+      case 'mythic':
+        return ACTIVATION_CATEGORY.mythic;
+      case 'lair':
+        return ACTIVATION_CATEGORY.lair;
+      case 'crew':
+        return ACTIVATION_CATEGORY.crew;
+      case 'special':
+        return ACTIVATION_CATEGORY.special;
+      case 'mixedActivation':
+        return ACTIVATION_CATEGORY.mixed;
+      default:
+        return ACTIVATION_CATEGORY.undefined;
+    }
+  }
+
+  private getDisplayCategory(): DisplayCategory {
+    const itemType = this.item.type;
+    switch (itemType) {
+      case 'feat':
+        return DISPLAY_CATEGORY.feature;
+      case 'spell':
+        return DISPLAY_CATEGORY.spell;
+      case 'weapon':
+      case 'equipment':
+      case 'consumable':
+      case 'tool':
+      case 'backpack':
+      case 'loot':
+        return DISPLAY_CATEGORY.item;
+      default:
+        return DISPLAY_CATEGORY.undefined;
+    }
   }
 
   private buildActivities(item: Item): QuickActivity[] {
