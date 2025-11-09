@@ -99,7 +99,7 @@ export class QuickItem {
 
   private getSpellSubcategory(): SpellSubcategory | undefined {
     const spellSystem = this.item.system as dnd5e.documents.ItemSystemData.Spell;
-    const preparationMode = spellSystem.preparation?.mode;
+    const preparationMode = spellSystem.method;
     const spellLevel = spellSystem.level;
 
     if (preparationMode === 'pact') return SPELL_SUBCATEGORY.pact;
