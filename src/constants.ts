@@ -48,6 +48,7 @@ export type DisplayCategory = {
   name: string;
 };
 export const DISPLAY_CATEGORY = {
+  unidentified: { sort: 0, name: 'display_unidentified' },
   item: { sort: 1, name: 'display_item' },
   feature: { sort: 2, name: 'display_feature' },
   spell: { sort: 3, name: 'display_spell' },
@@ -60,6 +61,7 @@ export type ActivationCategory = {
   name: string;
 };
 export const ACTIVATION_CATEGORY: Record<string, ActivationCategory> = {
+    unidentified: { name: 'activation_unidentified', sort: -1 },
     action: { name: 'activation_action', sort: 0 },
     bonus: { name: 'activation_bonus', sort: 1 },
     reaction: { name: 'activation_reaction', sort: 2 },
