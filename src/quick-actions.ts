@@ -211,7 +211,10 @@ const getSpellTypeCategory = (item: Item): ItemCategoryData | null => {
     }
 
     const method = item.system.method ?? '';
-    if (method === 'spell') {
+    const level = item.system.level ?? 0;
+
+    // If it's a cantrip (level 0) or a leveled spell with method 'spell'
+    if (level === 0 || method === 'spell') { 
         if (shouldFilterUnpreparedSpell(item)) { return null; }
         return getSpellLevelCategory(item);
     }
