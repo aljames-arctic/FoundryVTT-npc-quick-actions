@@ -1,6 +1,6 @@
 import * as ItemSystem from './item-system';
 import module from './module';
-import { ShowOnlyFavorites, ShowItemsInContainers, showUnequippedItems, showUnpreparedSpells } from './settings';
+import { ShowOnlyFavorites, ShowItemsInContainers, showUnequippedItems, showUnpreparedSpells, ShowZeroUsesRemainActions } from './settings';
 import { 
     ACTIVATION_CATEGORY, 
     DISPLAY_CATEGORY, 
@@ -386,16 +386,68 @@ const sortActions = (actions: Action[]) => {
   });
 };
 
-export const getTokenActions = (actor: Actor) => {
-  if (!actor) { return null;}
-  const actions: Action[] = [];
-  
-  for (const item of actor.items) {
-    if (item.system.properties?.has('trait')) continue;
-    const action = getActionForItem(actor, item);
-    if (action) { actions.push(action); }
+const calculateUpcastSlots = (actor: dnd5e.documents.Actor5e): Map<number, number> => {
+  const actorSpells = actor.system.spells;
+  const upcastSlots = new Map<number, number>();
+
+  const pactValue = actorSpells?.pact?.value ?? 0;
+  const pactLevel = actorSpells?.pact?.level ?? 0;
+
+  let runningTotal = 0;
+  for (let level = 9; level >= 1; level--) {
+    runningTotal += actorSpells?.[`spell${level}`]?.value ?? 0;
+    let levelTotal = runningTotal;
+    if (pactValue > 0 && pactLevel >= level) {
+      levelTotal += pactValue;
+    }
+    upcastSlots.set(level, levelTotal);
   }
-  
-  sortActions(actions);
+  return upcastSlots;
+}
+
+const filterActionsWithUses = (actions: Action[], actor: dnd5e.documents.Actor5e): Action[] => {
+    if (ShowZeroUsesRemainActions.get()) return actions;
+    const nonSpellActions = actions.filter(action => !action.category.spell);
+    const spellActions = actions.filter(action => action.category.spell);
+
+    // Non-Spells
+    let filteredActions: Action[] = [];
+    for (const action of nonSpellActions) {
+        filteredActions.push(action);
+    }
+
+    // Spells
+    const upcastSlots = calculateUpcastSlots(actor);
+    const pactSlots = actor.system.spells?.pact?.value ?? 0;
+    for (const action of spellActions) {
+        switch (action.item.system.method) {
+            case 'pact':
+                if (pactSlots > 0) filteredActions.push(action);
+                break;
+            default:
+                const spellCategory = action?.category?.spell ?? {level: -1};
+                if (upcastSlots.get(spellCategory.level)) filteredActions.push(action);
+                break;
+        }
+    }
+    return filteredActions;
+}
+
+const filterPassiveActions = (actions: Action[], actor: dnd5e.documents.Actor5e): Action[] => {
+    for (const item of actor.items) {
+        if (item.system.properties?.has('trait')) continue;
+        const action = getActionForItem(actor, item);
+        if (action) { actions.push(action); }
+    }
+    return actions;
+}
+
+export const getTokenActions = (actor: Actor) : Action[] => {
+  let actions: Action[] = [];
+  if (actor) {
+    actions = filterPassiveActions(actions, actor);
+    actions = filterActionsWithUses(actions, actor);
+    sortActions(actions);
+  }
   return actions;
 };

@@ -8,7 +8,7 @@ import {
 } from './constants';
 import module from './module';
 import { getTokenActions, type Action, type Category } from './quick-actions';
-import { MinimumRole, ShowForNPCActors, ShowForPCActors, ShowForVehicleActors, ShowZeroUsesRemainActions } from './settings';
+import { MinimumRole, ShowForNPCActors, ShowForPCActors, ShowForVehicleActors } from './settings';
 
 const CSS_ACTIVE = module.cssPrefix.child('active');
 const CSS_OUTER_CONTAINER = module.cssPrefix.child('outer-container');
@@ -126,25 +126,6 @@ const getActivationCategoryNameWithUses = (
     }
 };
 
-const calculateUpcastSlots = (actor: dnd5e.documents.Actor5e): Map<number, number> => {
-  const actorSpells = actor.system.spells;
-  const upcastSlots = new Map<number, number>();
-
-  const pactValue = actorSpells?.pact?.value ?? 0;
-  const pactLevel = actorSpells?.pact?.level ?? 0;
-
-  let runningTotal = 0;
-  for (let level = 9; level >= 1; level--) {
-    runningTotal += actorSpells?.[`spell${level}`]?.value ?? 0;
-    let levelTotal = runningTotal;
-    if (pactValue > 0 && pactLevel >= level) {
-      levelTotal += pactValue;
-    }
-    upcastSlots.set(level, levelTotal);
-  }
-  return upcastSlots;
-}
-
 const isShownForActorType = (actor: dnd5e.documents.Actor5e) => {
   if (actor.type === 'character') {
     return ShowForPCActors.get();
@@ -158,25 +139,6 @@ const isShownForActorType = (actor: dnd5e.documents.Actor5e) => {
   module.logger.debug('isShownForActorType saw a type it does not recognize:', actor.type);
   return true;
 };
-
-const filterActions = (actions: Action[], actor: dnd5e.documents.Actor5e): Action[] => {
-    const zeroSlotSpellSubcategories = new Set<string>();
-    if (!ShowZeroUsesRemainActions.get()) {
-      const upcastSlots = calculateUpcastSlots(actor);
-      for (const action of actions) {
-        const spellCategory = action.category.spell;
-        if (spellCategory?.slots && spellCategory.level > 0) {
-          if ((upcastSlots.get(spellCategory.level) ?? 0) === 0) {
-            zeroSlotSpellSubcategories.add(spellCategory.name);
-          }
-        }
-      }
-    }
-
-    return actions.filter(action => 
-        !action.category.spell || !zeroSlotSpellSubcategories.has(action.category.spell.name)
-    );
-}
 
 const buildActionsList = (actions: Action[], actor: dnd5e.documents.Actor5e) => {
     let lastDisplayCategory: DisplayCategory | null = null;
@@ -260,22 +222,11 @@ export const showTokenActions = (token?: Token | null) => {
     noActions.classList.add(CSS_NO_ACTIONS);
     noActions.appendChild(document.createTextNode(module.localize('no-actions')));
     actionsContainer.appendChild(noActions);
-  } else {
-    const filteredActions = filterActions(actions, actor);
-
-    if (filteredActions.length === 0) {
-        const noActions = document.createElement('div');
-        noActions.classList.add(CSS_NO_ACTIONS);
-        noActions.appendChild(document.createTextNode(module.localize('no-actions')));
-        actionsContainer.appendChild(noActions);
-        return true;
-    }
-
-    module.logger.debug('showTokenActions() -> true:', filteredActions);
-    buildActionsList(filteredActions, actor);
   }
-  repositionActionsOuterContainer(token as Token);
 
+  module.logger.debug('showTokenActions() -> true:', actions);
+  buildActionsList(actions, actor);
+  repositionActionsOuterContainer(token as Token);
   return true;
 };
 
