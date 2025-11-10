@@ -1,5 +1,5 @@
 import './styles.scss';
-import * as ui from './ui';
+import ui from './ui';
 
 let shownToken: Token | null = null;
 
