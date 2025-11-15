@@ -109,8 +109,8 @@ export class QuickItem {
 
   private getDisplayCategory(): DisplayCategory {
     // Special Cases
-    if (this.activationType === 'legendary') 
-        return DISPLAY_CATEGORY.special;
+    if (this.activationType === 'legendary') return DISPLAY_CATEGORY.special;
+    if (this.activationType === 'lair') return DISPLAY_CATEGORY.special;
 
     const itemType = this.item.type;
     switch (itemType) {
