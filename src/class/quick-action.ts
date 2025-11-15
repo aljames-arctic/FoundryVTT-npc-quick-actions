@@ -3,25 +3,25 @@ import { Category } from '../quick-actions';
 import { ShowOnlyFavorites } from '../settings';
 
 export class QuickActivity {
-    public name: string;
-    public isHidden: boolean;
-    public activationType: string;
+  public name: string;
+  public isHidden: boolean;
+  public activationType: string;
 
-    constructor(activity: any) {
-        this.name = activity.name;
-        this.isHidden = this.getIsHidden(activity);
-        this.activationType = activity.activation.type;
-    }
+  constructor(activity: any) {
+    this.name = activity.name;
+    this.isHidden = this.getIsHidden(activity);
+    this.activationType = activity.activation.type;
+  }
 
-    private getIsHidden(activity: any): boolean {
-        // Only show potentially combat usable actions.
-        const allowedTypes = ['action', 'bonus', 'reaction', 'legendary', 'mythic', 'lair', 'crew', 'special'];
-        const activationType = activity?.activation?.type;
-        if (!activationType || !allowedTypes.includes(activationType)) return true;
+  private getIsHidden(activity: any): boolean {
+    // Only show potentially combat usable actions.
+    const allowedTypes = ['action', 'bonus', 'reaction', 'legendary', 'mythic', 'lair', 'crew', 'special'];
+    const activationType = activity?.activation?.type;
+    if (!activationType || !allowedTypes.includes(activationType)) return true;
 
-        const isMidiAutomation = activity?.midiProperties?.automationOnly;
-        return isMidiAutomation ?? false;
-    }
+    const isMidiAutomation = activity?.midiProperties?.automationOnly;
+    return isMidiAutomation ?? false;
+  }
 }
 
 export class QuickItem {
@@ -32,11 +32,13 @@ export class QuickItem {
   public isHidden: boolean;
   public activities: QuickActivity[];
   public activationType: string;
+  private spellSlotMap: any;
 
-  constructor(item: Item) {
+  constructor(item: Item, spellSlotMap: any) {
     this.item = item;
     this.actor = item.actor;
     this.name = item.name;
+    this.spellSlotMap = spellSlotMap;
     this.activities = this.buildActivities(item);
     this.isHidden = this.getIsHidden();
     this.activationType = this.getActivationType();
@@ -44,11 +46,11 @@ export class QuickItem {
   }
 
   private getActivationType(): string {
-    const visibleActivities = this.activities.filter(a => !a.isHidden);
+    const visibleActivities = this.activities.filter((a) => !a.isHidden);
     if (visibleActivities.length === 0) return 'none';
 
     const firstType = visibleActivities[0].activationType;
-    if (visibleActivities.every(a => a.activationType === firstType)) return firstType;
+    if (visibleActivities.every((a) => a.activationType === firstType)) return firstType;
     return 'mixedActivation';
   }
 
@@ -104,7 +106,7 @@ export class QuickItem {
 
     if (preparationMode === 'pact') {
       const subcategory = { ...SPELL_SUBCATEGORY.pact };
-      const pact = actorSystem.spells.pact;
+      const pact = actorSystem.spells?.pact;
       if (pact) {
         subcategory.level = pact.level;
         if (pact.max > 0) {
@@ -119,7 +121,7 @@ export class QuickItem {
     if (spellLevel === 0) return SPELL_SUBCATEGORY.cantrip;
     if (spellLevel >= 1 && spellLevel <= 9) {
       const subcategory = { ...SPELL_SUBCATEGORY[`level${spellLevel}` as keyof typeof SPELL_SUBCATEGORY] };
-      const spellN = actorSystem.spells[`spell${spellLevel}`];
+      const spellN = actorSystem.spells?.[`spell${spellLevel}`];
       if (spellN && spellN.max > 0) {
         subcategory.slots = { available: spellN.value, maximum: spellN.max };
       }
@@ -132,9 +134,9 @@ export class QuickItem {
   private buildActivities(item: Item): QuickActivity[] {
     const activities: QuickActivity[] = [];
     if (item.system?.activities) {
-        for (const activity of item.system.activities.values()) {
-            activities.push(new QuickActivity(activity));
-        }
+      for (const activity of item.system.activities.values()) {
+        activities.push(new QuickActivity(activity));
+      }
     }
     return activities;
   }
@@ -144,24 +146,36 @@ export class QuickItem {
     if (!('favorites' in actor.system)) return true;
     const favorites = actor.system.favorites;
     if (!favorites?.length) return true;
-    return favorites.some(favorite => favorite.type === 'item' && favorite.id.endsWith(`.${this.item.id}`));
+    return favorites.some((favorite) => favorite.type === 'item' && favorite.id.endsWith(`.${this.item.id}`));
+  }
+
+  private shouldHideSpell(): boolean {
+    const spellSystem = this.item.system as dnd5e.documents.ItemSystemData.Spell;
+    const spellLevel = spellSystem.level;
+
+    if (spellSystem.method === 'atwill' || spellSystem.method === 'innate' || spellLevel === 0) {
+      return false;
+    }
+
+    if (spellSystem.method === 'pact') {
+      return (this.spellSlotMap.pact ?? 0) === 0;
+    }
+
+    if (spellLevel >= 1) {
+      const availableSlots = this.spellSlotMap[`spell${spellLevel}`] ?? 0;
+      return availableSlots === 0;
+    }
+
+    return true;
   }
 
   private getIsHidden(): boolean {
-    if (this.item.type === 'spell') {
-      const spellSystem = this.item.system as dnd5e.documents.ItemSystemData.Spell;
-      if (spellSystem.method === 'pact') {
-        const actorSystem = this.actor.system as any;
-        const pact = actorSystem.spells.pact;
-        if (pact && pact.max > 0 && pact.value === 0) return true;
-      }
-    }
-
+    if (this.item.type === 'spell' && this.shouldHideSpell()) return true;
     if (this.item.system.container) return true;
     if (ShowOnlyFavorites.get() && !this.isFavorite()) return true;
     if (this.item.system.properties?.has('trait')) return true;
     if (this.activities.length === 0) return true;
-    return this.activities.every(activity => activity.isHidden);
+    return this.activities.every((activity) => activity.isHidden);
   }
 
   roll() {
