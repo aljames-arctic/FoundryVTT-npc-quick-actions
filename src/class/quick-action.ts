@@ -70,8 +70,9 @@ export class QuickItem {
   }
 
   private getActionCategory(): ActivationCategory {
-    const standardActions = ['action', 'bonus', 'reaction', 'legendary', 'mythic', 'lair', 'crew', 'special'];
+    const standardActions = ['action', 'bonus', 'reaction', 'mythic', 'lair', 'crew', 'special'];
     if (standardActions.includes(this.activationType)) return ACTIVATION_CATEGORY[this.activationType];
+    if (this.activationType === 'legendary') return ACTIVATION_CATEGORY.legendaryAction;
     if (this.activationType == 'mixedActivation') return ACTIVATION_CATEGORY.mixed;
     return ACTIVATION_CATEGORY.undefined;
   }
