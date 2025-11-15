@@ -148,6 +148,15 @@ export class QuickItem {
   }
 
   private getIsHidden(): boolean {
+    if (this.item.type === 'spell') {
+      const spellSystem = this.item.system as dnd5e.documents.ItemSystemData.Spell;
+      if (spellSystem.method === 'pact') {
+        const actorSystem = this.actor.system as any;
+        const pact = actorSystem.spells.pact;
+        if (pact && pact.max > 0 && pact.value === 0) return true;
+      }
+    }
+
     if (this.item.system.container) return true;
     if (ShowOnlyFavorites.get() && !this.isFavorite()) return true;
     if (this.item.system.properties?.has('trait')) return true;
