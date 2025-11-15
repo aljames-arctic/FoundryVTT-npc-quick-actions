@@ -100,14 +100,30 @@ export class QuickItem {
     const spellSystem = this.item.system as dnd5e.documents.ItemSystemData.Spell;
     const preparationMode = spellSystem.method;
     const spellLevel = spellSystem.level;
+    const actorSystem = this.actor.system as any;
 
-    if (preparationMode === 'pact') return SPELL_SUBCATEGORY.pact;
+    if (preparationMode === 'pact') {
+      const subcategory = { ...SPELL_SUBCATEGORY.pact };
+      const pact = actorSystem.spells.pact;
+      if (pact) {
+        subcategory.level = pact.level;
+        if (pact.max > 0) {
+          subcategory.slots = { available: pact.value, maximum: pact.max };
+        }
+      }
+      return subcategory;
+    }
     if (preparationMode === 'atwill') return SPELL_SUBCATEGORY.atwill;
     if (preparationMode === 'innate') return SPELL_SUBCATEGORY.innate;
 
     if (spellLevel === 0) return SPELL_SUBCATEGORY.cantrip;
     if (spellLevel >= 1 && spellLevel <= 9) {
-      return SPELL_SUBCATEGORY[`level${spellLevel}` as keyof typeof SPELL_SUBCATEGORY];
+      const subcategory = { ...SPELL_SUBCATEGORY[`level${spellLevel}` as keyof typeof SPELL_SUBCATEGORY] };
+      const spellN = actorSystem.spells[`spell${spellLevel}`];
+      if (spellN && spellN.max > 0) {
+        subcategory.slots = { available: spellN.value, maximum: spellN.max };
+      }
+      return subcategory;
     }
 
     return undefined;

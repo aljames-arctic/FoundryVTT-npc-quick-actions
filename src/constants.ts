@@ -25,23 +25,23 @@ export type SpellSubcategory = {
   level: number;
   slots?: { available: number; maximum: number };
 };
-export const SPELL_SUBCATEGORY = {
-    additional: { name: 'spell_additional', sort: 0 },
-    pact: { name: 'spell_pact', sort: 1 },
-    atwill: { name: 'spell_atwill', sort: 2 },
-    ritual: { name: 'spell_ritual', sort: 3 },
-    innate: { name: 'spell_innate', sort: 4 },
-    cantrip: { name: 'spell_cantrip', sort: 5 },
-    level1: { name: 'spell_level1', sort: 6 },
-    level2: { name: 'spell_level2', sort: 7 },
-    level3: { name: 'spell_level3', sort: 8 },
-    level4: { name: 'spell_level4', sort: 9 },
-    level5: { name: 'spell_level5', sort: 10 },
-    level6: { name: 'spell_level6', sort: 11 },
-    level7: { name: 'spell_level7', sort: 12 },
-    level8: { name: 'spell_level8', sort: 13 },
-    level9: { name: 'spell_level9', sort: 14 },
-}
+export const SPELL_SUBCATEGORY: Record<string, Omit<SpellSubcategory, 'slots'>> = {
+    additional: { name: 'spell_additional', displayName: '', sort: 0, level: -1 },
+    pact: { name: 'spell_pact', displayName: '', sort: 1, level: -1 },
+    atwill: { name: 'spell_atwill', displayName: '', sort: 2, level: 0 },
+    ritual: { name: 'spell_ritual', displayName: '', sort: 3, level: -1 },
+    innate: { name: 'spell_innate', displayName: '', sort: 4, level: -1 },
+    cantrip: { name: 'spell_cantrip', displayName: '', sort: 5, level: 0 },
+    level1: { name: 'spell_level1', displayName: '', sort: 6, level: 1 },
+    level2: { name: 'spell_level2', displayName: '', sort: 7, level: 2 },
+    level3: { name: 'spell_level3', displayName: '', sort: 8, level: 3 },
+    level4: { name: 'spell_level4', displayName: '', sort: 9, level: 4 },
+    level5: { name: 'spell_level5', displayName: '', sort: 10, level: 5 },
+    level6: { name: 'spell_level6', displayName: '', sort: 11, level: 6 },
+    level7: { name: 'spell_level7', displayName: '', sort: 12, level: 7 },
+    level8: { name: 'spell_level8', displayName: '', sort: 13, level: 8 },
+    level9: { name: 'spell_level9', displayName: '', sort: 14, level: 9 },
+};
 
 export type DisplayCategory = {
   sort: number;
