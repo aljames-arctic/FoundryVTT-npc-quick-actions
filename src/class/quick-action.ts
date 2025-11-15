@@ -37,6 +37,9 @@ export class QuickActivity {
   }
 
   private getIsHidden(activity: any): boolean {
+    const isMidiAutomation = activity?.midiProperties?.automationOnly;
+    if (isMidiAutomation) return true;
+
     // Activation conditions not met.
     if (!this.activationConditionMet(activity)) return true;
 
@@ -45,8 +48,7 @@ export class QuickActivity {
     const activationType = activity?.activation?.type;
     if (!activationType || !allowedTypes.includes(activationType)) return true;
 
-    const isMidiAutomation = activity?.midiProperties?.automationOnly;
-    return isMidiAutomation ?? false;
+    return false;
   }
 }
 
