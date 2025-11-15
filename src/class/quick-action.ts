@@ -13,7 +13,33 @@ export class QuickActivity {
     this.activationType = activity.activation.type;
   }
 
+  private activationConditionMet(activity): boolean {
+    /**
+     * Safely evaluates a condition string in the context of an actor's roll data.
+     * @param {string} condition    The condition string to evaluate.
+     * @param {object} rollData     The actor's roll data.
+     * @returns {boolean}           The result of the evaluation.
+     */
+    function evaluateCondition(condition : string, rollData) {
+        if (!condition?.trim()) return true;
+        try {
+            const func = new Function(...Object.keys(rollData), `return ${condition};`);
+            return func(...Object.values(rollData));
+        } catch (err) {
+            // console.error(`Error evaluating condition "${condition}":`, err);
+            return true;
+        }
+    }
+
+    const condition = activity.activation.condition ?? 'true';
+    const rollData = activity.actor.getRollData();
+    return evaluateCondition(condition, rollData);
+  }
+
   private getIsHidden(activity: any): boolean {
+    // Activation conditions not met.
+    if (!this.activationConditionMet(activity)) return true;
+
     // Only show potentially combat usable actions.
     const allowedTypes = ['action', 'bonus', 'reaction', 'legendary', 'mythic', 'lair', 'crew', 'special'];
     const activationType = activity?.activation?.type;
