@@ -190,13 +190,13 @@ export class QuickItem {
       return false;
     }
 
-    // Check for if it is prepared
-    if (spellSystem.prepared === 0) return true;
-
     // Pact Magic can only be cast with Pact Slots
     if (spellSystem.method === 'pact') {
       return (this.spellSlotMap.pact ?? 0) === 0;
     }
+
+    // Check for if it is prepared
+    if (spellSystem.prepared === 0) return true;
 
     // Requires spell slots
     if (spellLevel >= 1) {
