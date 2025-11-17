@@ -185,20 +185,26 @@ export class QuickItem {
     const spellSystem = this.item.system as dnd5e.documents.ItemSystemData.Spell;
     const spellLevel = spellSystem.level;
 
+    // Don't need to prepare these... no spell level cost either
     if (spellSystem.method === 'atwill' || spellSystem.method === 'innate' || spellLevel === 0) {
       return false;
     }
 
+    // Check for if it is prepared
+    if (spellSystem.prepared === 0) return true;
+
+    // Pact Magic can only be cast with Pact Slots
     if (spellSystem.method === 'pact') {
       return (this.spellSlotMap.pact ?? 0) === 0;
     }
 
+    // Requires spell slots
     if (spellLevel >= 1) {
       const availableSlots = this.spellSlotMap[`spell${spellLevel}`] ?? 0;
-      return availableSlots === 0;
+      if (availableSlots === 0) return true;
     }
 
-    return true;
+    return false;
   }
 
   private getIsHidden(): boolean {
