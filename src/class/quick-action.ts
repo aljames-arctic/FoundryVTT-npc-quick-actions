@@ -181,14 +181,40 @@ export class QuickItem {
     return favorites.some((favorite) => favorite.type === 'item' && favorite.id.endsWith(`.${this.item.id}`));
   }
 
-  private shouldHideSpell(): boolean {
+  private requiresPreparation(): boolean {
+    const spellSystem = this.item.system as dnd5e.documents.ItemSystemData.Spell;
+
+    if (spellSystem.method === 'pact') return false;
+    if (spellSystem.method === 'atwill') return false;
+    if (spellSystem.method === 'innate') return false;
+    if (spellSystem.level === 0) return false;
+    
+    let sourceClass = spellSystem.sourceClass;
+    let noPreparationClasses = ['bard', 'sorcerer', 'warlock', 'ranger', 'rogue', 'fighter'];   // rogue and fighter are due to subclasses
+    if (noPreparationClasses.includes(sourceClass)) return false;
+
+    // All other spells require preparation
+    return true;
+  }
+
+  private hasResourcesToCast(): boolean {
     const spellSystem = this.item.system as dnd5e.documents.ItemSystemData.Spell;
     const spellLevel = spellSystem.level;
 
-    // Don't need to prepare these... no spell level cost either
+    // No cost to cast these
     if (spellSystem.method === 'atwill' || spellSystem.method === 'innate' || spellLevel === 0) {
       return false;
     }
+
+    // Requires spell slots
+    if (spellLevel >= 1) {
+      const availableSlots = this.spellSlotMap[`spell${spellLevel}`] ?? 0;
+      if (availableSlots === 0) return true;
+    }
+  }
+
+  private shouldHideSpell(): boolean {
+    const spellSystem = this.item.system as dnd5e.documents.ItemSystemData.Spell;
 
     // Pact Magic can only be cast with Pact Slots
     if (spellSystem.method === 'pact') {
@@ -196,19 +222,24 @@ export class QuickItem {
     }
 
     // Check for if it is prepared
-    if (spellSystem.prepared === 0) return true;
+    if (this.requiresPreparation()) {
+        if (spellSystem.prepared === 0) return true;
+    }
 
-    // Requires spell slots
-    if (spellLevel >= 1) {
-      const availableSlots = this.spellSlotMap[`spell${spellLevel}`] ?? 0;
-      if (availableSlots === 0) return true;
+    if (!this.hasResourcesToCast) {
+        return true;
     }
 
     return false;
   }
 
+  private shouldHideEquipable(): boolean {
+    return false;
+  }
+
   private getIsHidden(): boolean {
     if (this.item.type === 'spell' && this.shouldHideSpell()) return true;
+    if (this.item.type === 'equipment' && this.shouldHideEquipable()) return true;
     if (this.item.system.container) return true;
     if (ShowOnlyFavorites.get() && !this.isFavorite()) return true;
     if (this.item.system.properties?.has('trait')) return true;
