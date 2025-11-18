@@ -234,6 +234,8 @@ export class QuickItem {
   }
 
   private shouldHideEquipable(): boolean {
+    const itemSystem = this.item.system as dnd5e.documents.ItemEquipmentData.Equipment;
+    if (!itemSystem.equipped) return true;
     return false;
   }
 
