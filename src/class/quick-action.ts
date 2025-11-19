@@ -136,6 +136,10 @@ export class QuickItem {
     const spellLevel = spellSystem.level;
     const actorSystem = this.actor.system as any;
 
+    if (foundry.utils.getProperty(this.item, 'flags.dnd5e.cachedFor')) {
+      return SPELL_SUBCATEGORY.additional;
+    }
+
     if (preparationMode === 'pact') {
       const subcategory = { ...SPELL_SUBCATEGORY.pact };
       const pact = actorSystem.spells?.pact;
@@ -240,8 +244,17 @@ export class QuickItem {
   }
 
   private getIsHidden(): boolean {
-    if (this.item.type === 'spell' && this.shouldHideSpell()) return true;
-    if (this.item.type === 'equipment' && this.shouldHideEquipable()) return true;
+    switch (this.item.type) {
+        case 'spell':
+            if (this.shouldHideSpell()) return true;
+            break;
+        case 'consumable':
+        case 'equipment':
+        case 'weapon':
+        case 'tool':
+            if (this.shouldHideEquipable()) return true;
+            break;
+    }
     if (this.item.system.container) return true;
     if (ShowOnlyFavorites.get() && !this.isFavorite()) return true;
     if (this.item.system.properties?.has('trait')) return true;
