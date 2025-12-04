@@ -8,7 +8,7 @@ import {
 } from './constants';
 import module from './module';
 import { getTokenActions, type Action, type Category } from './quick-actions';
-import { MinimumRole, ShowForNPCActors, ShowForPCActors, ShowForVehicleActors } from './settings';
+import { MinimumRole, ShowForNPCActors, ShowForPCActors, ShowForVehicleActors, QuickActionBackgroundOpacity, QuickActionTextOpacity } from './settings';
 
 const CSS_ACTIVE = module.cssPrefix.child('active');
 const CSS_OUTER_CONTAINER = module.cssPrefix.child('outer-container');
@@ -240,6 +240,12 @@ export class QuickActionsUI {
     // Apply the horizontal positioning immediately
     this.actionsOuterContainer.style.left = `${leftOffset}px`;
     this.actionsOuterContainer.style.right = `calc(100% - ${rightOffset}px)`;
+    
+    const backgroundOpacity = QuickActionBackgroundOpacity.get();
+    this.actionsContainer.style.backgroundColor = `rgba(255, 255, 255, ${backgroundOpacity})`;
+    this.actionsContainer.style.borderColor = `rgba(255, 255, 255, ${backgroundOpacity})`;
+    this.actionsContainer.style.setProperty('--illandril-qaa-text-opacity', QuickActionTextOpacity.get().toString());
+
     this.actionsOuterContainer.classList.add(CSS_ACTIVE);
 
     // Phase 2: Defer vertical positioning until the HUD coordinates are stable

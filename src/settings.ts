@@ -71,3 +71,24 @@ export const ShowForNPCActors = module.settings.register('showForNPCActors', Boo
 export const ShowForVehicleActors = module.settings.register('showForVehicleActors', Boolean, false, {
   hasHint: true,
 });
+
+export const QuickActionBackgroundOpacity = module.settings.register('quickActionOpacity.background', Number, 1.0, {
+  hasHint: true,
+  scope: 'client',
+  range: {
+    max: 1.0,
+    min: 0.0,
+    step: 0.05,
+  },
+});
+
+export const QuickActionTextOpacity = module.settings.register('quickActionOpacity.text', Number, 1.0, {
+  hasHint: true,
+  scope: 'client',
+  range: {
+    max: 1.0,
+    min: 0.0,
+    step: 0.05,
+  },
+});
+

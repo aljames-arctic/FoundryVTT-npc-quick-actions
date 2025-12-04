@@ -34,7 +34,17 @@
       "showForNPCActors.label": "Show for Non-Player Character Actors",
       "showForNPCActors.hint": "If checked, the Quick Actions will show for Non-Player Character actors. Note: This is based on the actor type, not based on if the actor has a player owner or not.",
       "showForVehicleActors.label": "Show for Vehicle Actors",
-      "showForVehicleActors.hint": "If checked, the Quick Actions will show for Vehicle actors."
+      "showForVehicleActors.hint": "If checked, the Quick Actions will show for Vehicle actors.",
+      "quickActionOpacity": {
+        "background": {
+            "label": "Background Opacity",
+            "hint": "Sets the opacity level of the background element of the Quick Actions menu."
+        },
+        "text": {
+            "label": "Text Opacity",
+            "hint": "Sets the opacity level of the text elements of the Quick Actions menu."
+        }
+      }
     },
     "no-actions": "No available actions",
     "activation_action": "Actions",
