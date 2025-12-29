@@ -21,7 +21,8 @@ export class QuickActivity {
      * @returns {boolean}           The result of the evaluation.
      */
     function evaluateCondition(condition : string, rollData) {
-        if (!condition?.trim()) return true;
+        if (!condition || typeof condition !== 'string' || !condition.trim()) return true;
+
         try {
             const func = new Function(...Object.keys(rollData), `return ${condition};`);
             return func(...Object.values(rollData));
@@ -201,39 +202,39 @@ export class QuickItem {
     return true;
   }
 
-  private hasResourcesToCast(): boolean {
+  private spellSlotsAvailable(): boolean {
     const spellSystem = this.item.system as dnd5e.documents.ItemSystemData.Spell;
     const spellLevel = spellSystem.level;
 
     // No cost to cast these
     if (spellSystem.method === 'atwill' || spellSystem.method === 'innate' || spellLevel === 0) {
-      return false;
+      return true;
     }
 
     // Requires spell slots
     if (spellLevel >= 1) {
       const availableSlots = this.spellSlotMap[`spell${spellLevel}`] ?? 0;
-      if (availableSlots === 0) return true;
+      if (availableSlots === 0) return false;
     }
+
+    // Default assume we have all resources
+    return true;
   }
 
   private shouldHideSpell(): boolean {
     const spellSystem = this.item.system as dnd5e.documents.ItemSystemData.Spell;
-
-    // Pact Magic can only be cast with Pact Slots
-    if (spellSystem.method === 'pact') {
-      return (this.spellSlotMap.pact ?? 0) === 0;
-    }
 
     // Check for if it is prepared
     if (this.requiresPreparation()) {
         if (spellSystem.prepared === 0) return true;
     }
 
-    if (!this.hasResourcesToCast) {
+    // Check if we have all required resources
+    if (this.spellSlotsAvailable() == false) {
         return true;
     }
 
+    // Default assume we should not hide
     return false;
   }
 
