@@ -141,14 +141,13 @@ export class QuickItem {
       return SPELL_SUBCATEGORY.additional;
     }
 
-    if (preparationMode === 'pact') {
+    const pact = actorSystem.spells?.pact;
+    // When pact slots are expended, show the spell in its normal spell level category
+    if (preparationMode === 'pact' && (pact?.value ?? 0) > 0) {
       const subcategory = { ...SPELL_SUBCATEGORY.pact };
-      const pact = actorSystem.spells?.pact;
       if (pact) {
         subcategory.level = pact.level;
-        if (pact.max > 0) {
-          subcategory.slots = { available: pact.value, maximum: pact.max };
-        }
+        subcategory.slots = { available: pact.value ?? 0, maximum: pact.max ?? 0 };
       }
       return subcategory;
     }
@@ -211,14 +210,14 @@ export class QuickItem {
       return true;
     }
 
-    // Requires spell slots
+    // Requires spell slots (note: pact slots and spell slots are interchangable RAW)
     if (spellLevel >= 1) {
       const availableSlots = this.spellSlotMap[`spell${spellLevel}`] ?? 0;
-      if (availableSlots === 0) return false;
+      if (availableSlots > 0) return true;
     }
 
-    // Default assume we have all resources
-    return true;
+    // Lacks resources
+    return false;
   }
 
   private shouldHideSpell(): boolean {
