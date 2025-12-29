@@ -1,7 +1,7 @@
 import { getAllByTestId, screen } from '@testing-library/dom';
-import { ShowZeroUsesRemainActions } from './settings';
-import tuckerthranx from './tests/data/tokens/tuckertrhanx';
-import './index';
+import { ShowZeroUsesRemainActions } from '../settings';
+import tuckerthranx from './data/tokens/tuckertrhanx';
+import '../index';
 
 beforeAll(() => {
   SIMULATE.mockSavedSetting('illandril-npc-quick-actions', 'minimumRole', 'GAMEMASTER');
