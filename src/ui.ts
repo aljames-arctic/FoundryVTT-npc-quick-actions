@@ -127,17 +127,17 @@ export class QuickActionsUI {
   };
 
   private isShownForActorType = (actor: dnd5e.documents.Actor5e) => {
-    if (actor.type === 'character') {
-      return ShowForPCActors.get();
+    switch (actor.type) {
+      case 'character':
+        return ShowForPCActors.get();
+      case 'npc':
+        return ShowForNPCActors.get();
+      case 'vehicle':
+        return ShowForVehicleActors.get();
+      default:
+        module.logger.debug('isShownForActorType saw a type it does not recognize:', actor.type);
+        return true;
     }
-    if (actor.type === 'npc') {
-      return ShowForNPCActors.get();
-    }
-    if (actor.type === 'vehicle') {
-      return ShowForVehicleActors.get();
-    }
-    module.logger.debug('isShownForActorType saw a type it does not recognize:', actor.type);
-    return true;
   };
 
   private buildActionsList = (actions: Action[], actor: dnd5e.documents.Actor5e) => {
