@@ -46,6 +46,7 @@
     "@types/jest": "^29.5.13",
     "babel-jest": "^29.7.0",
     "babel-preset-minify": "^0.5.2",
+    "baseline-browser-mapping": "^2.9.11",
     "flat": "^6.0.1",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
