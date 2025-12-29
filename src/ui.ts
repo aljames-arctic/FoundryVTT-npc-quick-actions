@@ -104,7 +104,9 @@ export class QuickActionsUI {
         const spellSubcategory = category as SpellSubcategory;
         let displayName = module.localize(spellSubcategory.name);
         if (spellSubcategory.slots) {
-            displayName = `${displayName} (${spellSubcategory.slots.available} / ${spellSubcategory.slots.maximum})`;
+            const displayAmount = `${spellSubcategory.slots.available} / ${spellSubcategory.slots.maximum}`;
+            const display = (spellSubcategory.slots.available) ? displayAmount : `UPCAST`;
+            displayName = `${displayName} (${display})`;
         }
         return displayName;
     } else { // It's an ActivationCategory
