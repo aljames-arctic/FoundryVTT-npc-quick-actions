@@ -10,7 +10,7 @@ export class QuickActivity {
   constructor(activity: any) {
     this.name = activity.name;
     this.isHidden = this.getIsHidden(activity);
-    this.activationType = activity.activation.type;
+    this.activationType = activity?.activation?.type;
   }
 
   private activationConditionMet(activity): boolean {
@@ -31,7 +31,7 @@ export class QuickActivity {
         }
     }
 
-    const condition = activity.activation.condition ?? 'true';
+    const condition = activity?.activation?.condition ?? 'true';
     const rollData = activity.actor.getRollData();
     return evaluateCondition(condition, rollData);
   }
