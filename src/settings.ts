@@ -92,3 +92,7 @@ export const QuickActionTextOpacity = module.settings.register('quickActionOpaci
   },
 });
 
+export const ShowDeprecationWarning = module.settings.register('showDeprecationWarning', Boolean, true, {
+  hasHint: true,
+  scope: 'client',
+});

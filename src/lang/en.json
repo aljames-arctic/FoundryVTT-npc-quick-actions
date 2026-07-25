@@ -15,7 +15,7 @@
         "label": "Show Ammunition Counts",
         "hint": "If checked, for items that use ammunition, the current ammunition count will be shown next to the item name in the Quick Actions menu."
       },
-      "showItemsInContainers" : {
+      "showItemsInContainers": {
         "label": "Show Items in Containers",
         "hint": "If checked, items that are inside containers will be shown in the Quick Actions menu."
       },
@@ -37,13 +37,17 @@
       "showForVehicleActors.hint": "If checked, the Quick Actions will show for Vehicle actors.",
       "quickActionOpacity": {
         "background": {
-            "label": "Background Opacity",
-            "hint": "Sets the opacity level of the background element of the Quick Actions menu."
+          "label": "Background Opacity",
+          "hint": "Sets the opacity level of the background element of the Quick Actions menu."
         },
         "text": {
-            "label": "Text Opacity",
-            "hint": "Sets the opacity level of the text elements of the Quick Actions menu."
+          "label": "Text Opacity",
+          "hint": "Sets the opacity level of the text elements of the Quick Actions menu."
         }
+      },
+      "showDeprecationWarning": {
+        "label": "Show Deprecation Warning",
+        "hint": "If checked, a popup warning will appear on world load informing you that this module is deprecated and suggesting Bakana's Action Display."
       }
     },
     "no-actions": "No available actions",
@@ -67,7 +71,6 @@
     "activation_undefined": "Undefined",
     "reset-for-new-turn": "Reset Actions for New Turn",
     "legendary-actions-reset": "*Legendary Actions have been reset*",
-
     "spell_additional": "Additional Spells",
     "spell_atwill": "At Will Spells",
     "spell_ritual": "Ritual Spells",
@@ -83,8 +86,6 @@
     "spell_level7": "7th Level",
     "spell_level8": "8th Level",
     "spell_level9": "9th Level",
-
-
     "type_item": "Items",
     "type_weapon": "Weapons",
     "type_equipment": "Equipment",
@@ -92,7 +93,6 @@
     "type_other": "Other",
     "type_feature": "Features",
     "type_spell": "Spells",
-
     "spell-abbr": {
       "pact": "Pact Magic",
       "cantrip": "Cantrips",
@@ -104,6 +104,11 @@
     "spell-level-label": "Level",
     "recharge-roll": "Recharge Roll",
     "recharge-success": "☑",
-    "recharge-fail": "☒"
+    "recharge-fail": "☒",
+    "deprecation": {
+      "title": "Illandril's Token Quick Actions (5e) Deprecated",
+      "body": "<strong>Illandril's Token Quick Actions (5e)</strong> (as maintained by Bakana) is deprecated and will receive no new updates.<br><br>It is suggested to switch to <strong>Bakana's Action Display</strong>.<br><br>You can disable this notification in the Game Settings.",
+      "acknowledge": "Acknowledge"
+    }
   }
 }
